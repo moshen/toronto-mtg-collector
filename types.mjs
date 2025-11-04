@@ -1,0 +1,39 @@
+/**
+ * @typedef {Object} Card
+ * @property {number} num - Needed number
+ * @property {string} name - Card name
+ */
+
+/**
+ * @typedef {Object} CardWithPrice
+ * @property {number} num - Needed number
+ * @property {string} name - Card name
+ * @property {number} price - Card price
+ * @property {string} url - Card url to add to cart
+ * @property {boolean} foil - Is card a foil
+ */
+
+/**
+ * @typedef {Object} CardPrice
+ * @property {number} price - Card price
+ * @property {string} url - Card url to add to cart
+ * @property {boolean} foil - Is card a foil
+ */
+
+/**
+ * @typedef {Object<string, CardWithPrice>} FoundCards
+ */
+
+/**
+ * @typedef {Object} FoundAndNotCards
+ * @property {Object<string, FoundCards>} storesWithCards
+ * @property {[Card]} notFound
+ */
+
+/**
+ * @typedef {Object} Store
+ * @property {() => boolean} hasPage
+ * @property {(page: import('puppeteer-core').Page) => void} setPage
+ * @property {(deck: Object<string, Card>]) => Promise<FoundCards>} findCards
+ * @property {(deck: [CardWithPrice]) => Promise<void>} addToCart
+ */

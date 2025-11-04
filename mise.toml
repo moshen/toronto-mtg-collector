@@ -1,0 +1,8 @@
+[tools]
+biome = "2.3"
+node = "25"
+
+[tasks.fmt]
+description = "Format all files"
+shell = "powershell -c"
+run = "biome format --fix --indent-style=space --indent-width=4 (get-item *.mjs) (get-item */*.mjs)"

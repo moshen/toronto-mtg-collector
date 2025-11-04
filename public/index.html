@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/public/main.css"> 
+    </head>
+    <body>
+        <h1>Toronto MTG card finder</h1>
+
+        <form id="card-form">
+            <fieldset disabled="disabled">
+                <div><b>Card list</b></div>
+                <textarea id="card-list"></textarea>
+                <button type="submit">Add Cards</button>
+            </fieldset>
+        </form>
+
+        <div id="loading-spinner" class="invisible">
+            <img src="/public/tail-spin.svg"/>
+        </div>
+
+        <div id="card-table"></div>
+
+        <script type="module" src="/public/main.mjs"></script>
+    </body>
+</html>
