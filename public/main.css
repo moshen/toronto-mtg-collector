@@ -15,6 +15,10 @@ body {
     width: 3em;
 }
 
+.not-found-list {
+    padding: 2em;
+}
+
 .num-zero {
     background-color: lightsalmon;
 }

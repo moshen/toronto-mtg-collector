@@ -133,13 +133,15 @@ function createStoreTables(cards, storesWithCards) {
 }
 
 function createNotFoundTable(cards) {
+    if (cards.length < 1) {
+        return;
+    }
+
     const div = document.createElement("div");
     div.classList.add("not-found-list");
     const title = document.createElement("h3");
     title.textContent = "Not Found";
     div.appendChild(title);
-
-    console.log(cards);
 
     for (const card of cards) {
         const cardDiv = document.createElement("div");
