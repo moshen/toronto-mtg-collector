@@ -24,6 +24,48 @@ const numberChangeListener = (ev) => {
 };
 document.body.addEventListener("change", numberChangeListener);
 
+const buttonClickListener = (ev) => {
+    if (
+        ev.target.tagName === "BUTTON" &&
+        ev.target.classList.contains("add-to-cart")
+    ) {
+        ev.target.disabled = true;
+        form.querySelector("fieldset").disabled = true;
+        loadingSpinner.classList.remove("invisible");
+
+        const cards = {};
+        for (const storeEl of cardTable.querySelectorAll(".store-list")) {
+            const store = storeEl.getAttribute("data-store");
+            const rows = storeEl.querySelectorAll(
+                "tr.available"
+            );
+
+            for (const row of rows) {
+                const card = JSON.parse(row.getAttribute("data-card"));
+                card.num = +row.querySelector('input[type="number"]').value;
+
+                if (card.num < 1) {
+                    continue;
+                }
+
+                if (cards[store]?.constructor !== Object) {
+                    cards[store] = {};
+                }
+
+                cards[store][card.name] = card;
+            }
+        }
+
+        socket.send(
+            JSON.stringify({
+                action: "addToCart",
+                cards,
+            }),
+        );
+    }
+};
+document.body.addEventListener("click", buttonClickListener);
+
 function recalculateTotals(store) {
     const rows = store.querySelectorAll("tr.available");
 
@@ -170,6 +212,11 @@ function createStoreTables(cards, storesWithCards) {
     totalEl.classList.add("total");
     totalEl.setAttribute("data-total", total);
     cardTable.appendChild(totalEl);
+
+    const addToCart = document.createElement("button");
+    addToCart.textContent = "Add to Carts";
+    addToCart.classList.add("add-to-cart");
+    cardTable.appendChild(addToCart);
 }
 
 function createNotFoundTable(cards) {
@@ -200,6 +247,9 @@ socket.addEventListener("message", (ev) => {
             createStoreTables(message.data.cards, message.data.storesWithCards);
             createNotFoundTable(message.data.notFound);
             form.querySelector("fieldset").disabled = false;
+        case "addToCartResponse":
+            loadingSpinner.classList.add("invisible");
+        // TODO: clear items added to cart
     }
 });
 

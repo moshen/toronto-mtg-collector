@@ -1,4 +1,3 @@
-import { setTimeout } from "node:timers/promises";
 import Store from "./store.mjs";
 
 export class WizardTower extends Store {

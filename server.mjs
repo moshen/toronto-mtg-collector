@@ -57,6 +57,8 @@ fastify.register(async function (_fastify) {
                                 data,
                             }),
                         );
+                    case "addToCart":
+                        console.log(message);
                 }
             } catch (err) {
                 console.log(err);

@@ -50,7 +50,6 @@ export class FourOhOneGames extends Store {
                     timeout: 60000,
                 },
             );
-            await Promise.all([this._page.bringToFront(), setTimeout(500)]);
 
             while (true) {
                 try {
@@ -168,13 +167,12 @@ export class FourOhOneGames extends Store {
         return this._found;
     }
 
-    // TODO: fix this
     /**
-     * @param {[import('../types.mjs').CardPrice]} deck
+     * @param {Object<string, import('../types.mjs').CardWithPrice>} deck
      */
     async addToCart(deck) {
-        for (const card of deck) {
-            await this._page.goto(matches[0].url, {
+        for (const card of Object.values(deck)) {
+            await this._page.goto(card.url, {
                 waitUntil: "networkidle0",
             });
 
@@ -186,7 +184,7 @@ export class FourOhOneGames extends Store {
             await this._page.waitForSelector("#AddToCartText-product-template");
             await this._page.click("#AddToCartText-product-template");
             await this._page.waitForSelector(".cart-preview-title");
-            await setTimeout(2000);
+            await setTimeout(500);
         }
     }
 }

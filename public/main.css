@@ -37,6 +37,11 @@ body {
     padding: 2em;
 }
 
+button.add-to-cart {
+    margin: 2em;
+    padding: 2em;
+}
+
 #card-list {
     width: 100%;
     min-height: 300px;
