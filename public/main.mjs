@@ -19,7 +19,9 @@ const numberChangeListener = (ev) => {
             ev.target.classList.remove("num-zero");
         }
 
-        recalculateTotals(ev.target.parentElement.parentElement.parentElement.parentElement);
+        recalculateTotals(
+            ev.target.parentElement.parentElement.parentElement.parentElement,
+        );
     }
 };
 document.body.addEventListener("change", numberChangeListener);
@@ -36,9 +38,7 @@ const buttonClickListener = (ev) => {
         const cards = {};
         for (const storeEl of cardTable.querySelectorAll(".store-list")) {
             const store = storeEl.getAttribute("data-store");
-            const rows = storeEl.querySelectorAll(
-                "tr.available"
-            );
+            const rows = storeEl.querySelectorAll("tr.available");
 
             for (const row of rows) {
                 const card = JSON.parse(row.getAttribute("data-card"));
@@ -73,7 +73,7 @@ function recalculateTotals(store) {
     for (const row of rows) {
         const card = JSON.parse(row.getAttribute("data-card"));
         card.num = +row.querySelector('input[type="number"]').value;
-        storeTotal += (card.num * card.price);
+        storeTotal += card.num * card.price;
     }
 
     const storeTotalEl = store.querySelector(".total");
@@ -86,7 +86,7 @@ function recalculateTotals(store) {
     )}`;
     storeTotalEl.setAttribute("data-total", storeTotal);
 
-    const allStoreTotalEls = document.querySelectorAll('div.store-list .total');
+    const allStoreTotalEls = document.querySelectorAll("div.store-list .total");
     let total = 0;
     for (const storeTotalEl of allStoreTotalEls) {
         total += +storeTotalEl.getAttribute("data-total");
