@@ -18,10 +18,45 @@ const numberChangeListener = (ev) => {
         } else {
             ev.target.classList.remove("num-zero");
         }
+
+        recalculateTotals(ev.target.parentElement.parentElement.parentElement.parentElement);
     }
 };
-
 document.body.addEventListener("change", numberChangeListener);
+
+function recalculateTotals(store) {
+    const rows = store.querySelectorAll("tr.available");
+
+    let storeTotal = 0;
+    for (const row of rows) {
+        const card = JSON.parse(row.getAttribute("data-card"));
+        card.num = +row.querySelector('input[type="number"]').value;
+        storeTotal += (card.num * card.price);
+    }
+
+    const storeTotalEl = store.querySelector(".total");
+    storeTotalEl.textContent = `Store Total: ${storeTotal.toLocaleString(
+        "en-CA",
+        {
+            style: "currency",
+            currency: "CAD",
+        },
+    )}`;
+    storeTotalEl.setAttribute("data-total", storeTotal);
+
+    const allStoreTotalEls = document.querySelectorAll('div.store-list .total');
+    let total = 0;
+    for (const storeTotalEl of allStoreTotalEls) {
+        total += +storeTotalEl.getAttribute("data-total");
+    }
+
+    const totalEl = cardTable.querySelector(":scope > .total");
+    totalEl.textContent = `Total: ${total.toLocaleString("en-CA", {
+        style: "currency",
+        currency: "CAD",
+    })}`;
+    totalEl.setAttribute("data-total", total);
+}
 
 socket.addEventListener("open", (ev) => {
     form.querySelector("fieldset").disabled = false;
@@ -35,6 +70,7 @@ function createStoreTables(cards, storesWithCards) {
 
         const div = document.createElement("div");
         div.classList.add("store-list");
+        div.setAttribute("data-store", store);
         const title = document.createElement("h3");
         title.textContent = store;
         div.appendChild(title);
@@ -58,6 +94,7 @@ function createStoreTables(cards, storesWithCards) {
             if (!storesWithCards[store][card.name]) {
                 const tr = document.createElement("tr");
                 tr.classList.add("not-available");
+                tr.setAttribute("data-card", JSON.stringify(card));
                 const numTd = document.createElement("td");
                 tr.appendChild(numTd);
                 const nameTd = document.createElement("td");
@@ -74,6 +111,8 @@ function createStoreTables(cards, storesWithCards) {
             card = storesWithCards[store][card.name];
 
             const tr = document.createElement("tr");
+            tr.classList.add("available");
+            tr.setAttribute("data-card", JSON.stringify(card));
             const numTd = document.createElement("td");
             const num = document.createElement("input");
             num.type = "number";
@@ -116,6 +155,7 @@ function createStoreTables(cards, storesWithCards) {
             },
         )}`;
         storeTotalEl.classList.add("total");
+        storeTotalEl.setAttribute("data-total", storeTotal);
         div.appendChild(storeTotalEl);
         total += storeTotal;
 
@@ -128,7 +168,7 @@ function createStoreTables(cards, storesWithCards) {
         currency: "CAD",
     })}`;
     totalEl.classList.add("total");
-
+    totalEl.setAttribute("data-total", total);
     cardTable.appendChild(totalEl);
 }
 
