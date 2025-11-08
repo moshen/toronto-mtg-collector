@@ -66,6 +66,25 @@ const buttonClickListener = (ev) => {
 };
 document.body.addEventListener("click", buttonClickListener);
 
+const rowHoverListener = (ev) => {
+    const num = ev.target.getAttribute("data-row-num");
+    const rows = document.querySelectorAll(
+        `tr[data-row-num="${num}"].available`,
+    );
+    for (const row of rows) {
+        row.classList.add("row-highlight");
+    }
+};
+const rowHoverOffListener = (ev) => {
+    const num = ev.target.getAttribute("data-row-num");
+    const rows = document.querySelectorAll(
+        `tr[data-row-num="${num}"].available`,
+    );
+    for (const row of rows) {
+        row.classList.remove("row-highlight");
+    }
+};
+
 function recalculateTotals(store) {
     const rows = store.querySelectorAll("tr.available");
 
@@ -132,11 +151,13 @@ function createStoreTables(cards, storesWithCards) {
         header.appendChild(header4);
         table.appendChild(header);
 
+        let rowNum = 1;
         for (let card of Object.values(cards)) {
             if (!storesWithCards[store][card.name]) {
                 const tr = document.createElement("tr");
                 tr.classList.add("not-available");
                 tr.setAttribute("data-card", JSON.stringify(card));
+                tr.setAttribute("data-row-num", rowNum++);
                 const numTd = document.createElement("td");
                 tr.appendChild(numTd);
                 const nameTd = document.createElement("td");
@@ -155,6 +176,9 @@ function createStoreTables(cards, storesWithCards) {
             const tr = document.createElement("tr");
             tr.classList.add("available");
             tr.setAttribute("data-card", JSON.stringify(card));
+            tr.setAttribute("data-row-num", rowNum++);
+            tr.addEventListener("mouseenter", rowHoverListener);
+            tr.addEventListener("mouseleave", rowHoverOffListener);
             const numTd = document.createElement("td");
             const num = document.createElement("input");
             num.type = "number";
