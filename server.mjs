@@ -4,6 +4,7 @@ import fastifyWebsocket from "@fastify/websocket";
 import path from "node:path";
 import { Browser, Page } from "puppeteer-core";
 import stores from "./stores/index.mjs";
+import addToCarts from "./actions/addToCarts.mjs";
 import findCards from "./actions/findCards.mjs";
 
 /**
@@ -42,7 +43,7 @@ fastify.register(async function (_fastify) {
                 const message = JSON.parse(data.toString("utf-8"));
 
                 switch (message.action) {
-                    case "findCards":
+                    case "findCards": {
                         for (const store of Object.values(stores)) {
                             if (!store.hasPage()) {
                                 store.setPage(await _browser.newPage());
@@ -57,8 +58,19 @@ fastify.register(async function (_fastify) {
                                 data,
                             }),
                         );
-                    case "addToCart":
-                        console.log(message);
+                        break;
+                    }
+                    case "addToCarts": {
+                        const data = await addToCarts(message.cards);
+                        await _page.bringToFront();
+                        socket.send(
+                            JSON.stringify({
+                                action: "addToCartsResponse",
+                                data,
+                            }),
+                        );
+                        break;
+                    }
                 }
             } catch (err) {
                 console.log(err);

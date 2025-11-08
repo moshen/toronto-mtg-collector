@@ -168,24 +168,85 @@ export class FourOhOneGames extends Store {
     }
 
     /**
-     * @param {Object<string, import('../types.mjs').CardWithPrice>} deck
+     * @param {[import('../types.mjs').CardWithPrice]} deck
      */
     async addToCart(deck) {
-        for (const card of Object.values(deck)) {
+        this._signalController = new AbortController();
+        this._signal = this._signalController.signal;
+
+        cards: for (const card of deck) {
             await this._page.goto(card.url, {
                 waitUntil: "networkidle0",
             });
 
-            await this._page.waitForSelector("#Quantity");
+            // Find the card variant for the expected price
+            for (let i = 0; i < 3; i++) {
+                await this._page.waitForSelector(
+                    "#ProductPrice-product-template",
+                    {
+                        visible: true,
+                    },
+                );
+
+                if (
+                    await this._page.$eval(
+                        "#ProductPrice-product-template",
+                        (el, card) =>
+                            el.textContent ===
+                            card.price.toLocaleString("en-CA", {
+                                style: "currency",
+                                currency: "CAD",
+                            }),
+                        card,
+                    )
+                ) {
+                    break;
+                }
+
+                await this._page.waitForSelector(
+                    ".store-pass-variant-buttons a",
+                    {
+                        visible: true,
+                    },
+                );
+                if (
+                    !(await this._page.$$eval(
+                        ".store-pass-variant-buttons a",
+                        (els, i) => {
+                            if (i + 1 < els.length) {
+                                els[i + 1].click();
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        },
+                        i,
+                    ))
+                ) {
+                    // Did not find our card
+                    // TODO: Add to collection to return?
+                    console.log("Did not find card at fourOhOne", card);
+                    continue cards;
+                }
+
+                await setTimeout(100);
+            }
+            await setTimeout(200);
+
             const input = await this._page.$("#Quantity");
             await input.click({ clickCount: 3 });
             await input.type(card.num.toString());
 
-            await this._page.waitForSelector("#AddToCartText-product-template");
             await this._page.click("#AddToCartText-product-template");
-            await this._page.waitForSelector(".cart-preview-title");
-            await setTimeout(500);
+            await this._page.waitForSelector(".cart-preview", {
+                visible: true,
+            });
+            await setTimeout(200);
         }
+
+        // TODO: Open the cart and check what was added and add to results?
+
+        this._signalController.abort();
     }
 }
 

@@ -45,8 +45,10 @@ export class WizardTower extends Store {
                 "https://store.wizardtower.com/pages/deck-builder",
             );
 
-            await this._page.waitForSelector("#close-popup");
             try {
+                await this._page.waitForSelector("#close-popup", {
+                    timeout: 5000,
+                });
                 await this._page.click("#close-popup");
             } catch (_err) {
                 // Don't care about this
@@ -125,19 +127,36 @@ export class WizardTower extends Store {
                                 return memo;
                             }
 
-                            memo.push({
-                                foil,
-                                price:
-                                    +el.querySelector(".price-item")
-                                        .textContent,
-                                url:
+                            for (const variant of el.querySelectorAll(
+                                ".deck-builder-variant",
+                            )) {
+                                const url = new URL(
                                     "https://store.wizardtower.com" +
-                                    el
-                                        .querySelector(
-                                            ".deck-builder-product__title a",
-                                        )
-                                        .getAttribute("href"),
-                            });
+                                        el
+                                            .querySelector(
+                                                ".deck-builder-product__title a",
+                                            )
+                                            .getAttribute("href"),
+                                );
+                                const query = new URLSearchParams({
+                                    variant: variant.getAttribute(
+                                        "data-variant-container",
+                                    ),
+                                });
+
+                                memo.push({
+                                    foil,
+                                    price:
+                                        +variant.querySelector(".price-item")
+                                            .textContent,
+                                    url:
+                                        "https://store.wizardtower.com" +
+                                        url.pathname +
+                                        "?" +
+                                        query.toString(),
+                                });
+                            }
+
                             return memo;
                         }, []),
                     card.name,
@@ -182,7 +201,30 @@ export class WizardTower extends Store {
     /**
      * @param {[import('../types.mjs').CardWithPrice]} deck
      */
-    async addToCart(deck) {}
+    async addToCart(deck) {
+        this._signalController = new AbortController();
+        this._signal = this._signalController.signal;
+
+        for (const card of deck) {
+            await this._page.goto(card.url, {
+                waitUntil: "networkidle0",
+            });
+
+            const input = await this._page.$(".quantity__input");
+            await input.click({ clickCount: 3 });
+            await input.type(card.num.toString());
+
+            await this._page.click("button.product-form__submit");
+
+            await this._page.waitForSelector(".cart-notification__header", {
+                visible: true,
+            });
+        }
+
+        // TODO: Open the cart and check what was added and add to results?
+
+        this._signalController.abort();
+    }
 }
 
 export default new WizardTower();

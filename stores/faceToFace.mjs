@@ -1,3 +1,4 @@
+import { setTimeout } from "node:timers/promises";
 import Store from "./store.mjs";
 
 export class FaceToFace extends Store {
@@ -62,6 +63,7 @@ export class FaceToFace extends Store {
                     const name = el
                         .querySelector('span[x-text="key_name"]')
                         .textContent.toLocaleLowerCase();
+                    // FIXME: Shouldn't lowercase the decklist on every iteration
                     let card = Object.keys(deck).find(
                         (k) => k.toLocaleLowerCase() === name,
                     );
@@ -83,7 +85,7 @@ export class FaceToFace extends Store {
                             if (
                                 variant.querySelector(
                                     "button.product-form__submit span.text span",
-                                ).textContent.textContent === "Out of stock"
+                                ).textContent === "Out of stock"
                             ) {
                                 continue;
                             }
@@ -155,7 +157,60 @@ export class FaceToFace extends Store {
     /**
      * @param {[import('../types.mjs').CardWithPrice]} deck
      */
-    async addToCart(deck) {}
+    async addToCart(deck) {
+        this._signalController = new AbortController();
+        this._signal = this._signalController.signal;
+
+        for (const card of deck) {
+            await this._page.goto(card.url, {
+                waitUntil: "networkidle0",
+            });
+
+            let foundVariant = null;
+            const variants = await this._page.$$(".f2f-featured-variant");
+            for (const variant of variants) {
+                if (
+                    (
+                        await variant.$eval(
+                            ".price-item",
+                            (el) => el.textContent,
+                        )
+                    ).trim() ===
+                    card.price.toLocaleString("en-CA", {
+                        style: "currency",
+                        currency: "CAD",
+                    })
+                ) {
+                    foundVariant = variant;
+                }
+            }
+
+            if (foundVariant === null) {
+                // Did not find our card
+                // TODO: Add to collection to return?
+                console.log("Did not find card at faceToFace", card);
+                continue;
+            }
+
+            // TODO: Check available number
+
+            const input = await foundVariant.$(".quantity__input");
+            await input.click({ clickCount: 3 });
+            await input.type(card.num.toString());
+
+            await foundVariant.$eval("button.product-form__submit", (el) =>
+                el.click(),
+            );
+
+            await this._page.waitForSelector("#CartDrawer", {
+                visible: true,
+            });
+        }
+
+        // TODO: Open the cart and check what was added and add to results?
+
+        this._signalController.abort();
+    }
 }
 
 export default new FaceToFace();

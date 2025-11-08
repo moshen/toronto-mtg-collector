@@ -1,28 +1,10 @@
-import { setTimeout } from "node:timers/promises";
+import { cycleTabs } from "../util.mjs";
 import stores from "../stores/index.mjs";
 
 const lineRegex = /^([0-9]+)\s(.+)/;
 
 /**
- * @param {AbortSignal} signal
- */
-async function cycleTabs(signal) {
-    loop: while (true) {
-        for (const store of Object.values(stores)) {
-            if (signal.aborted) {
-                break loop;
-            }
-
-            if (store.isWorking()) {
-                await store.switchTab();
-                await setTimeout(500);
-            }
-        }
-    }
-}
-
-/**
- * @param {[import('../types.mjs').Card]} _cardlist
+ * @param {string} _cardlist
  * @returns {Object<string, import('../types.mjs').FoundCards>}
  */
 export default async function findCards(_cardlist) {
@@ -35,6 +17,10 @@ export default async function findCards(_cardlist) {
         }
 
         const match = line.match(lineRegex);
+
+        if (!match) {
+            return memo;
+        }
 
         // Collapse identical cards
         if (memo[match[2]]) {

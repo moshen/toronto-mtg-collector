@@ -58,7 +58,7 @@ const buttonClickListener = (ev) => {
 
         socket.send(
             JSON.stringify({
-                action: "addToCart",
+                action: "addToCarts",
                 cards,
             }),
         );
@@ -247,9 +247,10 @@ socket.addEventListener("message", (ev) => {
             createStoreTables(message.data.cards, message.data.storesWithCards);
             createNotFoundTable(message.data.notFound);
             form.querySelector("fieldset").disabled = false;
-        case "addToCartResponse":
+        case "addToCartsResponse":
             loadingSpinner.classList.add("invisible");
-        // TODO: clear items added to cart
+            console.log(message.data);
+        // TODO: clear items added to cart ?
     }
 });
 

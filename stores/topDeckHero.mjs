@@ -1,3 +1,4 @@
+import { setTimeout } from "node:timers/promises";
 import Store from "./store.mjs";
 
 export class TopDeckHero extends Store {
@@ -95,40 +96,35 @@ export class TopDeckHero extends Store {
 
                         const card = cards[name];
 
-                        const variants = el.querySelectorAll(".variant-row");
-                        let price = Infinity;
-
-                        for (const variant of variants) {
+                        for (const variant of el.querySelectorAll(
+                            ".variant-row",
+                        )) {
                             if (variant.classList.contains("no-stock")) {
                                 continue;
                             }
 
                             const priceEl = variant.querySelector("span.price");
-                            const tmpPrice = +priceEl.textContent.replaceAll(
+                            const price = +priceEl.textContent.replaceAll(
                                 /[^0-9'.]+/g,
                                 "",
                             );
 
-                            if (tmpPrice < price) {
-                                price = tmpPrice;
+                            const id = variant
+                                .querySelector("form.add-to-cart-form")
+                                .getAttribute("data-vid");
+
+                            if (!Array.isArray(memo[name])) {
+                                memo[name] = [];
                             }
-                        }
 
-                        // No stock
-                        if (price === Infinity) {
-                            return memo;
+                            memo[name].push({
+                                ...card,
+                                price,
+                                url,
+                                foil,
+                                id,
+                            });
                         }
-
-                        if (!Array.isArray(memo[name])) {
-                            memo[name] = [];
-                        }
-
-                        memo[name].push({
-                            ...card,
-                            price,
-                            url,
-                            foil,
-                        });
 
                         return memo;
                     }, {}),
@@ -171,7 +167,36 @@ export class TopDeckHero extends Store {
     /**
      * @param {[import('../types.mjs').CardWithPrice]} deck
      */
-    async addToCart(deck) {}
+    async addToCart(deck) {
+        this._signalController = new AbortController();
+        this._signal = this._signalController.signal;
+
+        for (const card of deck) {
+            const res = await this._page.goto(card.url, {
+                waitUntil: "networkidle0",
+            });
+
+            const variant = await this._page.$(`[data-vid="${card.id}"]`);
+
+            const input = await variant.$("input.qty");
+            await input.click({ clickCount: 3 });
+            await input.type(card.num.toString());
+            await this._page.keyboard.press("Enter");
+
+            await this._page.waitForSelector(".alert-msg", {
+                visible: true,
+            });
+
+            // We will get "too many searches" warning page without this
+            // Unfortunately the warning page isn't a 429 so we don't know the
+            // exact timing
+            await setTimeout(400);
+        }
+
+        // TODO: Open the cart and check what was added and add to results?
+
+        this._signalController.abort();
+    }
 }
 
 export default new TopDeckHero();

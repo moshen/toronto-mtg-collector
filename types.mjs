@@ -11,6 +11,7 @@
  * @property {number} price - Card price
  * @property {string} url - Card url to add to cart
  * @property {boolean} foil - Is card a foil
+ * @property {string?} id - Store card id
  */
 
 /**
@@ -18,6 +19,7 @@
  * @property {number} price - Card price
  * @property {string} url - Card url to add to cart
  * @property {boolean} foil - Is card a foil
+ * @property {string?} id - Store card id
  */
 
 /**
@@ -34,6 +36,8 @@
  * @typedef {Object} Store
  * @property {() => boolean} hasPage
  * @property {(page: import('puppeteer-core').Page) => void} setPage
+ * @property {() => Promise<void>} switchTab
+ * @property {() => boolean} isWorking
  * @property {(deck: Object<string, Card>]) => Promise<FoundCards>} findCards
  * @property {(deck: [CardWithPrice]) => Promise<void>} addToCart
  */
