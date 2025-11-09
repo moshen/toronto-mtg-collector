@@ -11,7 +11,7 @@ export default async function findCards(_cardlist) {
     /**
      * @type {Object<string, import('../types.mjs').Card>}
      */
-    const cards = _cardlist.split(/\r?\n/).reduce((memo, line) => {
+    const cards1 = _cardlist.split(/\r?\n/).reduce((memo, line) => {
         if (line === "") {
             return memo;
         }
@@ -34,6 +34,14 @@ export default async function findCards(_cardlist) {
 
         return memo;
     }, {});
+
+    // This will sort the returned list
+    const cards = {};
+    Object.keys(cards1)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((k) => {
+            cards[k] = cards1[k];
+        });
 
     /**
      * @type {Object<string, Promise<import('../types.mjs').FoundCards>>}
