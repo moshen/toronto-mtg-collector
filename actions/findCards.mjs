@@ -24,9 +24,9 @@ export default async function findCards(_cardlist) {
 
         // Collapse identical cards
         if (memo[match[2]]) {
-            memo[match[2]].num += +match[1];
+            memo[match[2].toLocaleLowerCase()].num += +match[1];
         } else {
-            memo[match[2]] = {
+            memo[match[2].toLocaleLowerCase()] = {
                 num: +match[1],
                 name: match[2],
             };
