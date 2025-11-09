@@ -4,6 +4,8 @@ const textarea = document.getElementById("card-list");
 const loadingSpinner = document.getElementById("loading-spinner");
 const cardTable = document.getElementById("card-table");
 
+let notificationsEnabled = false;
+
 const numberChangeListener = (ev) => {
     if (
         ev.target.getAttribute("type") === "number" &&
@@ -271,9 +273,17 @@ socket.addEventListener("message", (ev) => {
             createStoreTables(message.data.cards, message.data.storesWithCards);
             createNotFoundTable(message.data.notFound);
             form.querySelector("fieldset").disabled = false;
+            if (notificationsEnabled) {
+                new Notification("Find cards complete");
+            }
+            break;
         case "addToCartsResponse":
             loadingSpinner.classList.add("invisible");
             console.log(message.data);
+            if (notificationsEnabled) {
+                new Notification("Add to carts complete");
+            }
+            break;
         // TODO: clear items added to cart ?
     }
 });
@@ -290,4 +300,11 @@ form.addEventListener("submit", (ev) => {
             cardlist,
         }),
     );
+});
+
+Notification.requestPermission().then((permission) => {
+    if (permission === "granted") {
+        notificationsEnabled = true;
+        new Notification("MTG Card Finder Notifications Enabled");
+    }
 });
