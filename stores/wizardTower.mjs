@@ -64,7 +64,9 @@ export class WizardTower extends Store {
             await this._page.click("#submit-button");
 
             await this._page.waitForSelector("#deck-builder-results");
-            await this._page.waitForSelector(".deck-builder-result-group");
+            await this._page.waitForSelector(".deck-builder-result-group", {
+                timeout: 120000,
+            });
 
             const resultRegex = /^([0-9]+) result/;
 
@@ -121,7 +123,10 @@ export class WizardTower extends Store {
                                 foil = true;
                             }
 
-                            name = name.replace(/( \(.+| - .+Foil.+)$/, "");
+                            name = name.replace(
+                                /( \(.+| - .+Foil.+|\s*\/.+)$/,
+                                "",
+                            );
 
                             if (name !== cardName) {
                                 return memo;
@@ -206,19 +211,28 @@ export class WizardTower extends Store {
         this._signal = this._signalController.signal;
 
         for (const card of deck) {
-            await this._page.goto(card.url, {
-                waitUntil: "networkidle0",
-            });
+            try {
+                await this._page.goto(card.url, {
+                    waitUntil: "networkidle0",
+                });
 
-            const input = await this._page.$(".quantity__input");
-            await input.click({ clickCount: 3 });
-            await input.type(card.num.toString());
+                const input = await this._page.$(".quantity__input");
+                await input.click({ clickCount: 3 });
+                await input.type(card.num.toString());
 
-            await this._page.click("button.product-form__submit");
+                await this._page.click("button.product-form__submit");
 
-            await this._page.waitForSelector(".cart-notification__header", {
-                visible: true,
-            });
+                await this._page.waitForSelector(".cart-notification__header", {
+                    visible: true,
+                });
+            } catch (err) {
+                // Something went wrong
+                console.log(
+                    "Error adding card to cart for WizardTower",
+                    card,
+                    err,
+                );
+            }
         }
 
         // TODO: Open the cart and check what was added and add to results?

@@ -33,114 +33,140 @@ export class FaceToFace extends Store {
             return this._found;
         }
 
-        await this._page.goto("https://facetofacegames.com/pages/deck-builder");
-        await this._page.waitForSelector("#textarea_input");
-        const input = await this._page.$("#textarea_input");
-        const inputText = deckArr.reduce(
-            (memo, card) => `${memo}\n${card.num} ${card.name}`,
-            "",
-        );
-        await input.type(inputText);
-        await this._page.click("button.db-decklist-get");
-
-        await this._page.waitForSelector(".hits-wrap-data-info");
-        await this._page.$$eval(".hits-wrap-data-info", (els) =>
-            els.forEach((el, n) => {
-                if (n > 0) {
-                    el.click();
-                }
-            }),
-        );
-        await this._page.waitForSelector(".bb-card-wrapper");
-
         /**
-         * @type {Object<string, [import('../types.mjs').CardWithPrice]>}
+         * @type {[[import('../types.mjs').Card]]}
          */
-        const matches = await this._page.$$eval(
-            "div.hits-wrap",
-            (els, deck) =>
-                els.reduce((memo, el) => {
-                    const name = el
-                        .querySelector('span[x-text="key_name"]')
-                        .textContent.toLocaleLowerCase();
-                    // FIXME: Shouldn't lowercase the decklist on every iteration
-                    let card = Object.keys(deck).find(
-                        (k) => k.toLocaleLowerCase() === name,
-                    );
+        const deckSlices = [];
+        for (let i = 0; i <= deckArr.length; i += 50) {
+            deckSlices.push(deckArr.slice(i, i + 50));
+        }
 
-                    if (!card) {
-                        return memo;
-                    }
+        for (const deckSlice of deckSlices) {
+            await this._page.goto(
+                "https://facetofacegames.com/pages/deck-builder",
+            );
+            await this._page.waitForSelector("#textarea_input");
+            const input = await this._page.$("#textarea_input");
+            // Reset the textarea
+            await this._page.$eval("#textarea_input", (el) => (el.value = ""));
+            const inputText = deckSlice.reduce(
+                (memo, card) => `${memo}\n${card.num} ${card.name}`,
+                "",
+            );
+            await input.type(inputText);
+            await this._page.click("button.db-decklist-get");
 
-                    card = deck[card];
-
-                    for (const version of el.querySelectorAll(
-                        ".bb-card-wrapper",
-                    )) {
-                        let price = Infinity;
-
-                        for (const variant of version.querySelectorAll(
-                            ".f2f-featured-variant",
-                        )) {
-                            if (
-                                variant.querySelector(
-                                    "button.product-form__submit span.text span",
-                                ).textContent === "Out of stock"
-                            ) {
-                                continue;
-                            }
-
-                            const foundPrice = +variant
-                                .querySelector(".price-item")
-                                .textContent.replaceAll(/[^0-9\.]+/g, "");
-                            if (price > foundPrice) {
-                                price = foundPrice;
-                            }
-                        }
-
-                        if (price < Infinity) {
-                            // Found
-                            if (!Array.isArray(memo[card.name])) {
-                                memo[card.name] = [];
-                            }
-
-                            memo[card.name].push({
-                                ...card,
-                                price,
-                                url: version.querySelector(".bb-card-title a")
-                                    .href,
-                                foil:
-                                    version.querySelector(
-                                        '[data-label="Non-Foil"]',
-                                    ) === null,
-                            });
-                        }
-                    }
-
-                    return memo;
-                }, {}),
-            deck,
-        );
-
-        for (const match of Object.keys(matches)) {
-            // Sort prices for result
-            matches[match].sort((a, b) => {
-                if (a.foil && b.foil) {
-                    return a.price - b.price;
-                }
-
-                if (a.foil && !b.foil) {
-                    return 1;
-                }
-
-                if (!a.foil && b.foil) {
-                    return -1;
-                }
-
-                return a.price - b.price;
+            await this._page.waitForSelector(".hits-wrap-data-info");
+            await this._page.evaluate(() => {
+                window.scrollTo(0, document.body.scrollHeight);
             });
+            await this._page.$$eval(".hits-wrap-data-info", (els) =>
+                els.forEach((el, n) => {
+                    if (n > 0) {
+                        el.click();
+                    }
+                }),
+            );
+            await this._page.waitForSelector(".bb-card-wrapper");
 
-            this._found[match] = matches[match][0];
+            /**
+             * @type {Object<string, [import('../types.mjs').CardWithPrice]>}
+             */
+            const matches = await this._page.$$eval(
+                "div.hits-wrap",
+                (els, deck) =>
+                    els.reduce((memo, el) => {
+                        const name = el
+                            .querySelector('span[x-text="key_name"]')
+                            .textContent.toLocaleLowerCase();
+                        let card = Object.keys(deck).find((k) => {
+                            if (k.includes("/") || name.includes("/")) {
+                                return k
+                                    .replace(/\/.+$/, "")
+                                    .trim()
+                                    .startsWith(
+                                        name.replace(/\/.+$/, "").trim(),
+                                    );
+                            } else {
+                                return k === name;
+                            }
+                        });
+
+                        if (!card) {
+                            return memo;
+                        }
+
+                        card = deck[card];
+
+                        for (const version of el.querySelectorAll(
+                            ".bb-card-wrapper",
+                        )) {
+                            let price = Infinity;
+
+                            for (const variant of version.querySelectorAll(
+                                ".f2f-featured-variant",
+                            )) {
+                                if (
+                                    variant.querySelector(
+                                        "button.product-form__submit span.text span",
+                                    ).textContent === "Out of stock"
+                                ) {
+                                    continue;
+                                }
+
+                                const foundPrice = +variant
+                                    .querySelector(".price-item")
+                                    .textContent.replaceAll(/[^0-9\.]+/g, "");
+                                if (price > foundPrice) {
+                                    price = foundPrice;
+                                }
+                            }
+
+                            if (price < Infinity) {
+                                // Found
+                                if (!Array.isArray(memo[card.name])) {
+                                    memo[card.name] = [];
+                                }
+
+                                memo[card.name].push({
+                                    ...card,
+                                    price,
+                                    url: version.querySelector(
+                                        ".bb-card-title a",
+                                    ).href,
+                                    foil:
+                                        version.querySelector(
+                                            '[data-label="Non-Foil"]',
+                                        ) === null,
+                                });
+                            }
+                        }
+
+                        return memo;
+                    }, {}),
+                deck,
+            );
+
+            for (const match of Object.keys(matches)) {
+                // Sort prices for result
+                matches[match].sort((a, b) => {
+                    if (a.foil && b.foil) {
+                        return a.price - b.price;
+                    }
+
+                    if (a.foil && !b.foil) {
+                        return 1;
+                    }
+
+                    if (!a.foil && b.foil) {
+                        return -1;
+                    }
+
+                    return a.price - b.price;
+                });
+
+                this._found[match] = matches[match][0];
+            }
         }
 
         for (const search of Object.values(searching)) {
@@ -162,49 +188,58 @@ export class FaceToFace extends Store {
         this._signal = this._signalController.signal;
 
         for (const card of deck) {
-            await this._page.goto(card.url, {
-                waitUntil: "networkidle0",
-            });
+            try {
+                await this._page.goto(card.url, {
+                    waitUntil: "networkidle0",
+                });
 
-            let foundVariant = null;
-            const variants = await this._page.$$(".f2f-featured-variant");
-            for (const variant of variants) {
-                if (
-                    (
-                        await variant.$eval(
-                            ".price-item",
-                            (el) => el.textContent,
-                        )
-                    ).trim() ===
-                    card.price.toLocaleString("en-CA", {
-                        style: "currency",
-                        currency: "CAD",
-                    })
-                ) {
-                    foundVariant = variant;
+                let foundVariant = null;
+                const variants = await this._page.$$(".f2f-featured-variant");
+                for (const variant of variants) {
+                    if (
+                        (
+                            await variant.$eval(
+                                ".price-item",
+                                (el) => el.textContent,
+                            )
+                        ).trim() ===
+                        card.price.toLocaleString("en-CA", {
+                            style: "currency",
+                            currency: "CAD",
+                        })
+                    ) {
+                        foundVariant = variant;
+                    }
                 }
+
+                if (foundVariant === null) {
+                    // Did not find our card
+                    // TODO: Add to collection to return?
+                    console.log("Did not find card at faceToFace", card);
+                    continue;
+                }
+
+                // TODO: Check available number
+
+                const input = await foundVariant.$(".quantity__input");
+                await input.click({ clickCount: 3 });
+                await input.type(card.num.toString());
+
+                await foundVariant.$eval("button.product-form__submit", (el) =>
+                    el.click(),
+                );
+
+                await this._page.waitForSelector("#CartDrawer", {
+                    visible: true,
+                });
+            } catch (err) {
+                // Something went wrong
+                console.log(
+                    "Error adding card to cart for FaceToFace",
+                    card,
+                    err,
+                );
             }
-
-            if (foundVariant === null) {
-                // Did not find our card
-                // TODO: Add to collection to return?
-                console.log("Did not find card at faceToFace", card);
-                continue;
-            }
-
-            // TODO: Check available number
-
-            const input = await foundVariant.$(".quantity__input");
-            await input.click({ clickCount: 3 });
-            await input.type(card.num.toString());
-
-            await foundVariant.$eval("button.product-form__submit", (el) =>
-                el.click(),
-            );
-
-            await this._page.waitForSelector("#CartDrawer", {
-                visible: true,
-            });
         }
 
         // TODO: Open the cart and check what was added and add to results?

@@ -172,25 +172,35 @@ export class TopDeckHero extends Store {
         this._signal = this._signalController.signal;
 
         for (const card of deck) {
-            const res = await this._page.goto(card.url, {
-                waitUntil: "networkidle0",
-            });
+            try {
+                const res = await this._page.goto(card.url, {
+                    waitUntil: "networkidle0",
+                });
 
-            const variant = await this._page.$(`[data-vid="${card.id}"]`);
+                const variant = await this._page.$(`[data-vid="${card.id}"]`);
 
-            const input = await variant.$("input.qty");
-            await input.click({ clickCount: 3 });
-            await input.type(card.num.toString());
-            await this._page.keyboard.press("Enter");
+                const input = await variant.$("input.qty");
+                await input.click({ clickCount: 3 });
+                await input.type(card.num.toString());
+                await this._page.keyboard.press("Enter");
 
-            await this._page.waitForSelector(".alert-msg", {
-                visible: true,
-            });
+                await this._page.waitForSelector(".alert-msg", {
+                    visible: true,
+                    timeout: 60000,
+                });
 
-            // We will get "too many searches" warning page without this
-            // Unfortunately the warning page isn't a 429 so we don't know the
-            // exact timing
-            await setTimeout(400);
+                // We will get "too many searches" warning page without this
+                // Unfortunately the warning page isn't a 429 so we don't know the
+                // exact timing
+                await setTimeout(400);
+            } catch (err) {
+                // Something went wrong. TopDeckHero loves to time us out
+                console.log(
+                    "Error adding card to cart for TopDeckHero",
+                    card,
+                    err,
+                );
+            }
         }
 
         // TODO: Open the cart and check what was added and add to results?
