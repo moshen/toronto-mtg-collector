@@ -69,6 +69,7 @@ export default class Store {
 
     /**
      * @param {[import('../types.mjs').CardWithPrice]} deck
+     * @returns {Promise<import("../types.mjs").MissingCards>}
      */
     async addToCart(deck) {
         throw new Error("addToCart not implemented");

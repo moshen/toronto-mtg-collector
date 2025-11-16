@@ -27,6 +27,10 @@
  */
 
 /**
+ * @typedef {Object<string, CardWithPrice>} MissingCards
+ */
+
+/**
  * @typedef {Object} FoundAndNotCards
  * @property {Object<string, FoundCards>} storesWithCards
  * @property {[Card]} notFound
@@ -39,5 +43,5 @@
  * @property {() => Promise<void>} switchTab
  * @property {() => boolean} isWorking
  * @property {(deck: Object<string, Card>]) => Promise<FoundCards>} findCards
- * @property {(deck: [CardWithPrice]) => Promise<void>} addToCart
+ * @property {(deck: [CardWithPrice]) => Promise<MissingCards>} addToCart
  */

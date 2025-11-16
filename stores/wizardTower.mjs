@@ -210,10 +210,16 @@ export class WizardTower extends Store {
 
     /**
      * @param {[import('../types.mjs').CardWithPrice]} deck
+     * @returns {Promise<import("../types.mjs").MissingCards>}
      */
     async addToCart(deck) {
         this._signalController = new AbortController();
         this._signal = this._signalController.signal;
+
+        /**
+         * @type {import("../types.mjs").MissingCards}
+         */
+        const missingCards = {};
 
         for (const card of deck) {
             try {
@@ -237,12 +243,15 @@ export class WizardTower extends Store {
                     card,
                     err,
                 );
+                missingCards[card.name.toLocaleLowerCase()] = card;
             }
         }
 
         // TODO: Open the cart and check what was added and add to results?
 
         this._signalController.abort();
+
+        return missingCards;
     }
 }
 

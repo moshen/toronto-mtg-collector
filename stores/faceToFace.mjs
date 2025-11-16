@@ -182,10 +182,16 @@ export class FaceToFace extends Store {
 
     /**
      * @param {[import('../types.mjs').CardWithPrice]} deck
+     * @returns {Promise<import("../types.mjs").MissingCards>}
      */
     async addToCart(deck) {
         this._signalController = new AbortController();
         this._signal = this._signalController.signal;
+
+        /**
+         * @type {import("../types.mjs").MissingCards}
+         */
+        const missingCards = {};
 
         for (const card of deck) {
             try {
@@ -216,6 +222,7 @@ export class FaceToFace extends Store {
                     // Did not find our card
                     // TODO: Add to collection to return?
                     console.log("Did not find card at faceToFace", card);
+                    missingCards[card.name.toLocaleLowerCase()] = card;
                     continue;
                 }
 
@@ -239,12 +246,15 @@ export class FaceToFace extends Store {
                     card,
                     err,
                 );
+                missingCards[card.name.toLocaleLowerCase()] = card;
             }
         }
 
         // TODO: Open the cart and check what was added and add to results?
 
         this._signalController.abort();
+
+        return missingCards;
     }
 }
 

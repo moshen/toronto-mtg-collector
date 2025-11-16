@@ -169,10 +169,16 @@ export class FourOhOneGames extends Store {
 
     /**
      * @param {[import('../types.mjs').CardWithPrice]} deck
+     * @returns {Promise<import("../types.mjs").MissingCards>}
      */
     async addToCart(deck) {
         this._signalController = new AbortController();
         this._signal = this._signalController.signal;
+
+        /**
+         * @type {import("../types.mjs").MissingCards}
+         */
+        const missingCards = {};
 
         cards: for (const card of deck) {
             try {
@@ -225,8 +231,8 @@ export class FourOhOneGames extends Store {
                         ))
                     ) {
                         // Did not find our card
-                        // TODO: Add to collection to return?
                         console.log("Did not find card at fourOhOne", card);
+                        missingCards[card.name.toLocaleLowerCase()] = card;
                         continue cards;
                     }
 
@@ -250,12 +256,15 @@ export class FourOhOneGames extends Store {
                     card,
                     err,
                 );
+                missingCards[card.name.toLocaleLowerCase()] = card;
             }
         }
 
         // TODO: Open the cart and check what was added and add to results?
 
         this._signalController.abort();
+
+        return missingCards;
     }
 }
 

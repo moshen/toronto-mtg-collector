@@ -3,6 +3,7 @@ const form = document.getElementById("card-form");
 const textarea = document.getElementById("card-list");
 const loadingSpinner = document.getElementById("loading-spinner");
 const cardTable = document.getElementById("card-table");
+const cardControls = document.getElementById("card-controls");
 
 let notificationsEnabled = false;
 
@@ -28,45 +29,45 @@ const numberChangeListener = (ev) => {
 };
 document.body.addEventListener("change", numberChangeListener);
 
-const buttonClickListener = (ev) => {
-    if (
-        ev.target.tagName === "BUTTON" &&
-        ev.target.classList.contains("add-to-cart")
-    ) {
-        ev.target.disabled = true;
-        form.querySelector("fieldset").disabled = true;
-        loadingSpinner.classList.remove("invisible");
+const addToCartsListener = (ev) => {
+    ev.target.disabled = true;
+    form.querySelector("fieldset").disabled = true;
+    loadingSpinner.classList.remove("invisible");
 
-        const cards = {};
-        for (const storeEl of cardTable.querySelectorAll(".store-list")) {
-            const store = storeEl.getAttribute("data-store");
-            const rows = storeEl.querySelectorAll("tr.available");
+    /**
+     * @type {Object<string, Object<string, import("../types.mjs").CardWithPrice>>}
+     */
+    const cards = {};
+    for (const storeEl of cardTable.querySelectorAll(".store-list")) {
+        const store = storeEl.getAttribute("data-store");
+        const rows = storeEl.querySelectorAll("tr.available");
 
-            for (const row of rows) {
-                const card = JSON.parse(row.getAttribute("data-card"));
-                card.num = +row.querySelector('input[type="number"]').value;
+        for (const row of rows) {
+            /**
+             * @type {import("../types.mjs").CardWithPrice}
+             */
+            const card = JSON.parse(row.getAttribute("data-card"));
+            card.num = +row.querySelector('input[type="number"]').value;
 
-                if (card.num < 1) {
-                    continue;
-                }
-
-                if (cards[store]?.constructor !== Object) {
-                    cards[store] = {};
-                }
-
-                cards[store][card.name] = card;
+            if (card.num < 1) {
+                continue;
             }
-        }
 
-        socket.send(
-            JSON.stringify({
-                action: "addToCarts",
-                cards,
-            }),
-        );
+            if (cards[store]?.constructor !== Object) {
+                cards[store] = {};
+            }
+
+            cards[store][card.name.toLocaleLowerCase()] = card;
+        }
     }
+
+    socket.send(
+        JSON.stringify({
+            action: "addToCarts",
+            cards,
+        }),
+    );
 };
-document.body.addEventListener("click", buttonClickListener);
 
 const rowHoverListener = (ev) => {
     const num = ev.target.getAttribute("data-row-num");
@@ -113,7 +114,7 @@ function recalculateTotals(store) {
         total += +storeTotalEl.getAttribute("data-total");
     }
 
-    const totalEl = cardTable.querySelector(":scope > .total");
+    const totalEl = cardControls.querySelector(":scope > .total");
     totalEl.textContent = `Total: ${total.toLocaleString("en-CA", {
         style: "currency",
         currency: "CAD",
@@ -237,18 +238,21 @@ function createStoreTables(cards, storesWithCards) {
     })}`;
     totalEl.classList.add("total");
     totalEl.setAttribute("data-total", total);
-    cardTable.appendChild(totalEl);
+    cardControls.appendChild(totalEl);
 
     const addToCart = document.createElement("button");
     addToCart.textContent = "Add to Carts";
-    addToCart.classList.add("add-to-cart");
-    cardTable.appendChild(addToCart);
+    addToCart.classList.add("add-to-carts");
+    addToCart.addEventListener("click", addToCartsListener);
+    cardControls.appendChild(addToCart);
 }
 
 function createNotFoundTable(cards) {
     if (cards.length < 1) {
         return;
     }
+
+    cardControls.querySelector(".not-found-list")?.remove();
 
     const div = document.createElement("div");
     div.classList.add("not-found-list");
@@ -262,7 +266,51 @@ function createNotFoundTable(cards) {
         div.appendChild(cardDiv);
     }
 
-    cardTable.appendChild(div);
+    cardControls.appendChild(div);
+}
+
+/**
+ * @param {Object<string, import("../types.mjs").MissingCards>} storesMissingCards
+ */
+function updateTableAmountsFromCarts(storesMissingCards) {
+    for (const store of Object.keys(storesMissingCards)) {
+        const storeEl = cardTable.querySelector(`[data-store="${store}"]`);
+        for (const cardRow of Array.from(
+            storeEl.querySelectorAll("tr input:not(.num-zero)"),
+        ).map((el) => el.closest("tr"))) {
+            /**
+             * @type {import("../types.mjs").CardWithPrice}
+             */
+            const card = JSON.parse(cardRow.getAttribute("data-card"));
+
+            if (!storesMissingCards[store][card.name.toLocaleLowerCase()]) {
+                const input = cardRow.querySelector("input");
+                input.value = 0;
+                input.classList.add("num-zero");
+            }
+        }
+        recalculateTotals(storeEl);
+
+        // Add element to show issues
+        storeEl.querySelector(".missing-cards")?.remove();
+        const missingCards = document.createElement("div");
+        missingCards.classList.add("missing-cards");
+        const header = document.createElement("h3");
+        header.textContent = "Cards missing from cart (errors)";
+        missingCards.appendChild(header);
+
+        const cardArr = Object.values(storesMissingCards[store]);
+        if (cardArr.length < 1) {
+            continue;
+        }
+
+        for (const card of cardArr) {
+            const cardRow = document.createElement("div");
+            cardRow.textContent = `${card.num} ${card.name}`;
+            missingCards.appendChild(cardRow);
+        }
+        storeEl.appendChild(missingCards);
+    }
 }
 
 socket.addEventListener("message", (ev) => {
@@ -279,6 +327,12 @@ socket.addEventListener("message", (ev) => {
             break;
         case "addToCartsResponse":
             loadingSpinner.classList.add("invisible");
+            // Purposfully leaving the card entry form disabled
+
+            // Remove all items that successfully added
+            updateTableAmountsFromCarts(message.data);
+
+            document.querySelector("button.add-to-carts").disabled = false;
             console.log(message.data);
             if (notificationsEnabled) {
                 new Notification("Add to carts complete");
@@ -292,6 +346,7 @@ form.addEventListener("submit", (ev) => {
     form.querySelector("fieldset").disabled = true;
     loadingSpinner.classList.remove("invisible");
     cardTable.innerHTML = "";
+    cardControls.innerHTML = "";
     ev.preventDefault();
     const cardlist = textarea.value;
     socket.send(

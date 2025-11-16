@@ -3,13 +3,13 @@ import stores from "../stores/index.mjs";
 
 /**
  * @param {Object<string, Object<string, import("../types.mjs").CardWithPrice>>} cards
- * @returns {Object}
+ * @returns {Promise<Object<string, import("../types.mjs").MissingCards>>}
  */
 export default async function addToCarts(cards) {
+    /**
+     * @type {Object<string, Promise<import("../types.mjs").MissingCards>>}
+     */
     const storeAddtoCartPromises = {};
-
-    const signalController = new AbortController();
-    const signal = signalController.signal;
 
     for (const cardsStore of Object.keys(cards)) {
         if (!stores[cardsStore]) {
@@ -24,6 +24,9 @@ export default async function addToCarts(cards) {
 
     await cycleTabs();
 
+    /**
+     * @type {Object<string, import("../types.mjs").MissingCards>}
+     */
     const storeAddToCartResults = {};
 
     for (const resultStore of Object.keys(storeAddtoCartPromises)) {

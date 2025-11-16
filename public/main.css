@@ -41,7 +41,7 @@ body {
     padding: 2em;
 }
 
-button.add-to-cart {
+button.add-to-carts {
     margin: 2em;
     padding: 2em;
 }
@@ -58,5 +58,6 @@ button.add-to-cart {
 }
 
 #card-table {
-
+    display: flex;
+    flex-direction: row;
 }
