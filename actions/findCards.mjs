@@ -90,9 +90,27 @@ function findCheapest(cards, storesWithCards) {
                 continue;
             }
 
+            // Prefer non-foil
             if (
-                storesWithCards[cheapestStore][card.name].price >
-                storesWithCards[store][card.name].price
+                storesWithCards[cheapestStore][card.name.toLocaleLowerCase()]
+                    .foil &&
+                !storesWithCards[store][card.name.toLocaleLowerCase()].foil
+            ) {
+                cheapestStore = store;
+                continue;
+            }
+            if (
+                !storesWithCards[cheapestStore][card.name.toLocaleLowerCase()]
+                    .foil &&
+                storesWithCards[store][card.name.toLocaleLowerCase()].foil
+            ) {
+                continue;
+            }
+
+            if (
+                storesWithCards[cheapestStore][card.name.toLocaleLowerCase()]
+                    .price >
+                storesWithCards[store][card.name.toLocaleLowerCase()].price
             ) {
                 cheapestStore = store;
                 continue;
