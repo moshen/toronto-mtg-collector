@@ -22,7 +22,7 @@ export default async function addToCarts(cards) {
         );
     }
 
-    cycleTabs(signal);
+    await cycleTabs();
 
     const storeAddToCartResults = {};
 
@@ -30,8 +30,6 @@ export default async function addToCarts(cards) {
         storeAddToCartResults[resultStore] =
             await storeAddtoCartPromises[resultStore];
     }
-
-    signalController.abort();
 
     return storeAddToCartResults;
 }

@@ -52,8 +52,7 @@ export default async function findCards(_cardlist) {
         cardsFromStoresPromises[store] = stores[store].findCards(cards);
     }
 
-    const signalController = new AbortController();
-    cycleTabs(signalController.signal);
+    await cycleTabs();
 
     /**
      * @type {Object<string, import('../types.mjs').FoundCards>}
@@ -65,8 +64,6 @@ export default async function findCards(_cardlist) {
         const result = await cardsFromStoresPromises[store];
         cardsFromStores[store] = result;
     }
-
-    signalController.abort();
 
     console.log(JSON.stringify(cardsFromStores, undefined, 2));
 

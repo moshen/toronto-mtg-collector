@@ -5,20 +5,21 @@ import stores from "./stores/index.mjs";
  * This looks insane, but we're trying to switch tabs to activly operating tabs
  *
  * This appears to be required for some store pages to load propertly
- *
- * @param {AbortSignal} signal
  */
-export async function cycleTabs(signal) {
+export async function cycleTabs() {
     loop: while (true) {
-        for (const store of Object.values(stores)) {
-            if (signal.aborted) {
-                break loop;
-            }
+        let workingCount = 0;
 
+        for (const store of Object.values(stores)) {
             if (store.isWorking()) {
+                workingCount++;
                 await store.switchTab();
                 await setTimeout(500);
             }
+        }
+
+        if (workingCount === 0) {
+            break loop;
         }
     }
 }
