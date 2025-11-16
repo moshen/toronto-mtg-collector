@@ -15,15 +15,15 @@ export class FaceToFace extends Store {
          */
         const searching = {};
         for (const card of Object.values(deck)) {
-            if (this._found[card.name]) {
+            if (this._found[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            if (this._notFound[card.name]) {
+            if (this._notFound[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            searching[card.name] = card;
+            searching[card.name.toLocaleLowerCase()] = card;
         }
 
         const deckArr = Object.values(searching);
@@ -165,13 +165,13 @@ export class FaceToFace extends Store {
                     return a.price - b.price;
                 });
 
-                this._found[match] = matches[match][0];
+                this._found[match.toLocaleLowerCase()] = matches[match][0];
             }
         }
 
         for (const search of Object.values(searching)) {
-            if (!this._found[search.name]) {
-                this._notFound[search.name] = search;
+            if (!this._found[search.name.toLocaleLowerCase()]) {
+                this._notFound[search.name.toLocaleLowerCase()] = search;
             }
         }
 

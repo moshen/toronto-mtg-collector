@@ -23,7 +23,7 @@ export default async function findCards(_cardlist) {
         }
 
         // Collapse identical cards
-        if (memo[match[2]]) {
+        if (memo[match[2].toLocaleLowerCase()]) {
             memo[match[2].toLocaleLowerCase()].num += +match[1];
         } else {
             memo[match[2].toLocaleLowerCase()] = {
@@ -81,7 +81,7 @@ function findCheapest(cards, storesWithCards) {
     for (const card of Object.values(cards)) {
         let cheapestStore = "";
         for (const store of Object.keys(stores)) {
-            if (!storesWithCards[store][card.name]) {
+            if (!storesWithCards[store][card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
@@ -111,12 +111,11 @@ function findCheapest(cards, storesWithCards) {
                 continue;
             }
 
-            if (!storesWithCards[store][card.name]) {
+            if (!storesWithCards[store][card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            storesWithCards[store][card.name].num = 0;
-            console.log(storesWithCards[store][card.name]);
+            storesWithCards[store][card.name.toLocaleLowerCase()].num = 0;
         }
     }
 

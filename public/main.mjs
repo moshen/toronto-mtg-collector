@@ -155,7 +155,7 @@ function createStoreTables(cards, storesWithCards) {
 
         let rowNum = 1;
         for (let card of Object.values(cards)) {
-            if (!storesWithCards[store][card.name]) {
+            if (!storesWithCards[store][card.name.toLocaleLowerCase()]) {
                 const tr = document.createElement("tr");
                 tr.classList.add("not-available");
                 tr.setAttribute("data-card", JSON.stringify(card));
@@ -173,7 +173,7 @@ function createStoreTables(cards, storesWithCards) {
                 continue;
             }
 
-            card = storesWithCards[store][card.name];
+            card = storesWithCards[store][card.name.toLocaleLowerCase()];
 
             const tr = document.createElement("tr");
             tr.classList.add("available");

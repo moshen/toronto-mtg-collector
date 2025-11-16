@@ -15,15 +15,15 @@ export class TopDeckHero extends Store {
          */
         const searching = {};
         for (const card of Object.values(deck)) {
-            if (this._found[card.name]) {
+            if (this._found[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            if (this._notFound[card.name]) {
+            if (this._notFound[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            searching[card.name] = card;
+            searching[card.name.toLocaleLowerCase()] = card;
         }
 
         const deckArr = Object.values(searching);
@@ -83,7 +83,7 @@ export class TopDeckHero extends Store {
 
                         name = name.replace(/ - .+$/, "");
 
-                        if (!cards[name]) {
+                        if (!cards[name.toLocaleLowerCase()]) {
                             // Not a match?
                             return memo;
                         }
@@ -94,7 +94,7 @@ export class TopDeckHero extends Store {
                                 .querySelector("[itemprop='url']")
                                 .getAttribute("href");
 
-                        const card = cards[name];
+                        const card = cards[name.toLocaleLowerCase()];
 
                         for (const variant of el.querySelectorAll(
                             ".variant-row",
@@ -149,13 +149,13 @@ export class TopDeckHero extends Store {
                     return a.price - b.price;
                 });
 
-                this._found[match] = matches[match][0];
+                this._found[match.toLocaleLowerCase()] = matches[match][0];
             }
         }
 
         for (const search of Object.values(searching)) {
-            if (!this._found[search.name]) {
-                this._notFound[search.name] = search;
+            if (!this._found[search.name.toLocaleLowerCase()]) {
+                this._notFound[search.name.toLocaleLowerCase()] = search;
             }
         }
 

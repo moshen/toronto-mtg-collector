@@ -14,15 +14,15 @@ export class WizardTower extends Store {
          */
         const searching = {};
         for (const card of Object.values(deck)) {
-            if (this._found[card.name]) {
+            if (this._found[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            if (this._notFound[card.name]) {
+            if (this._notFound[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            searching[card.name] = card;
+            searching[card.name.toLocaleLowerCase()] = card;
         }
 
         const deckArr = Object.values(searching);
@@ -79,7 +79,7 @@ export class WizardTower extends Store {
                     ".deck-builder-result-group__title",
                     (el) => el.textContent,
                 );
-                const card = searching[name];
+                const card = searching[name.toLocaleLowerCase()];
 
                 if (!card) {
                     console.log("Unable to find", name);
@@ -95,14 +95,14 @@ export class WizardTower extends Store {
 
                 if (!countMatch) {
                     console.log("Failed to match", card);
-                    this._notFound[card.name] = card;
+                    this._notFound[card.name.toLocaleLowerCase()] = card;
                     continue;
                 }
 
                 const count = +countMatch[1];
 
                 if (count < 1) {
-                    this._notFound[card.name] = card;
+                    this._notFound[card.name.toLocaleLowerCase()] = card;
                     continue;
                 }
 
@@ -173,7 +173,7 @@ export class WizardTower extends Store {
                 );
 
                 if (matches.length < 1) {
-                    this._notFound[card.name] = card;
+                    this._notFound[card.name.toLocaleLowerCase()] = card;
                     continue;
                 }
 
@@ -196,7 +196,7 @@ export class WizardTower extends Store {
                 console.log("Cheapest: ", card.name, matches[0]);
 
                 // Select best
-                this._found[card.name] = {
+                this._found[card.name.toLocaleLowerCase()] = {
                     ...card,
                     ...matches[0],
                 };

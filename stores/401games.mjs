@@ -29,15 +29,15 @@ export class FourOhOneGames extends Store {
          */
         const searching = {};
         for (const card of Object.values(deck)) {
-            if (this._found[card.name]) {
+            if (this._found[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            if (this._notFound[card.name]) {
+            if (this._notFound[card.name.toLocaleLowerCase()]) {
                 continue;
             }
 
-            searching[card.name] = card;
+            searching[card.name.toLocaleLowerCase()] = card;
         }
 
         card: for (const card of Object.values(searching)) {
@@ -72,7 +72,7 @@ export class FourOhOneGames extends Store {
                     console.log(text);
                 } catch (err) {
                     // Something went wrong, ignore the card
-                    this._notFound[card.name] = card;
+                    this._notFound[card.name.toLocaleLowerCase()] = card;
                     continue card;
                 }
 
@@ -133,7 +133,7 @@ export class FourOhOneGames extends Store {
 
             if (matches.length < 1) {
                 console.log("None found");
-                this._notFound[card.name] = card;
+                this._notFound[card.name.toLocaleLowerCase()] = card;
                 await setTimeout(200);
                 continue;
             }
@@ -155,7 +155,7 @@ export class FourOhOneGames extends Store {
             });
             console.log("Cheapest: ", matches[0]);
 
-            this._found[card.name] = {
+            this._found[card.name.toLocaleLowerCase()] = {
                 ...card,
                 ...matches[0],
             };
