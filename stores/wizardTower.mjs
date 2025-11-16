@@ -118,6 +118,11 @@ export class WizardTower extends Store {
                                 ".deck-builder-product__title",
                             ).textContent;
 
+                            // Wizard Tower mixes art cards in with search results
+                            if (name.endsWith("Art Card")) {
+                                return memo;
+                            }
+
                             let foil = false;
                             if (name.endsWith("Foil")) {
                                 foil = true;
