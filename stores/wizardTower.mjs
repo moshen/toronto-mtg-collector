@@ -115,7 +115,7 @@ export class WizardTower extends Store {
                             ).textContent;
 
                             // Wizard Tower mixes art cards in with search results
-                            if (name.endsWith("Art Card")) {
+                            if (name.includes("Art Card")) {
                                 return memo;
                             }
 
