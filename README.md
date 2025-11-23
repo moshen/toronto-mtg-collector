@@ -20,7 +20,7 @@ mise install
 ## Run
 
 ```shell
-mise task run it
+mise run it
 ```
 
 ## Developing
@@ -28,12 +28,13 @@ mise task run it
 Make sure to run the formatter:
 
 ```shell
-mise task run fmt
+mise run fmt
 ```
 
 ## TODO
 
-- Look at availability for cards
-  - This will require a little bit of a rework
+- Look at number of available cards
+  - This will require a little bit of a rework as I initially was only thinking
+    about commander when making this
 - Add store selector
 - Add toggle for foil/non-foil/cheapest preference
