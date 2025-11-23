@@ -33,11 +33,11 @@ export class TopDeckHero extends Store {
          * @type {[[import('../types.mjs').Card]]}
          */
         const deckSlices = [];
-        for (let i = 0; i <= deckArr.length; i += 500) {
-            deckSlices.push(deckArr.slice(i, i + 500));
+        for (let i = 0; i <= deckArr.length; i += 50) {
+            deckSlices.push(deckArr.slice(i, i + 50));
         }
 
-        for (const deckSlice of deckSlices) {
+        deckSlice: for (const deckSlice of deckSlices) {
             await this._page.goto(
                 "https://www.topdeckhero.com/products/multi_search",
             );
@@ -54,78 +54,98 @@ export class TopDeckHero extends Store {
                 el.nextElementSibling?.click();
             });
 
-            try {
-                await this._page.waitForSelector("li.product .inner");
-            } catch (err) {
-                // Most likely search failed
-                continue;
-            }
+            let matches = {};
 
-            /**
-             * @type {Object<string, [import('../types.mjs').CardWithPrice]>}
-             */
-            const matches = await this._page.$$eval(
-                "li.product .inner",
-                (els, cards) =>
-                    els.reduce((memo, el) => {
-                        let name = el
-                            .querySelector("[itemprop='name']")
-                            .getAttribute("title");
+            // For each page of results
+            while (true) {
+                try {
+                    await this._page.waitForSelector("li.product .inner");
+                } catch (err) {
+                    // Most likely search failed
+                    continue deckSlice;
+                }
 
-                        let foil = false;
-                        if (name.includes("Foil")) {
-                            foil = true;
-                        }
+                /**
+                 * @type {Object<string, [import('../types.mjs').CardWithPrice]>}
+                 */
+                matches = await this._page.$$eval(
+                    "li.product .inner",
+                    (els, cards, matches) =>
+                        els.reduce((memo, el) => {
+                            let name = el
+                                .querySelector("[itemprop='name']")
+                                .getAttribute("title");
 
-                        name = name.replace(/ - .+$/, "");
+                            let foil = false;
+                            if (name.includes("Foil")) {
+                                foil = true;
+                            }
 
-                        if (!cards[name.toLocaleLowerCase()]) {
-                            // Not a match?
+                            name = name.replace(/ - .+$/, "");
+
+                            if (!cards[name.toLocaleLowerCase()]) {
+                                // Not a match?
+                                return memo;
+                            }
+
+                            const url =
+                                "https://www.topdeckhero.com" +
+                                el
+                                    .querySelector("[itemprop='url']")
+                                    .getAttribute("href");
+
+                            const card = cards[name.toLocaleLowerCase()];
+
+                            for (const variant of el.querySelectorAll(
+                                ".variant-row",
+                            )) {
+                                if (variant.classList.contains("no-stock")) {
+                                    continue;
+                                }
+
+                                const priceEl =
+                                    variant.querySelector("span.price");
+                                const price = +priceEl.textContent.replaceAll(
+                                    /[^0-9'.]+/g,
+                                    "",
+                                );
+
+                                const id = variant
+                                    .querySelector("form.add-to-cart-form")
+                                    .getAttribute("data-vid");
+
+                                if (!Array.isArray(memo[name])) {
+                                    memo[name] = [];
+                                }
+
+                                memo[name].push({
+                                    ...card,
+                                    price,
+                                    url,
+                                    foil,
+                                    id,
+                                });
+                            }
+
                             return memo;
-                        }
+                        }, matches),
+                    searching,
+                    matches,
+                );
 
-                        const url =
-                            "https://www.topdeckhero.com" +
-                            el
-                                .querySelector("[itemprop='url']")
-                                .getAttribute("href");
+                const nextButton = await this._page.$(
+                    ".pagination a.next_page",
+                );
+                if (nextButton === null) {
+                    // No more pages
+                    break;
+                }
 
-                        const card = cards[name.toLocaleLowerCase()];
-
-                        for (const variant of el.querySelectorAll(
-                            ".variant-row",
-                        )) {
-                            if (variant.classList.contains("no-stock")) {
-                                continue;
-                            }
-
-                            const priceEl = variant.querySelector("span.price");
-                            const price = +priceEl.textContent.replaceAll(
-                                /[^0-9'.]+/g,
-                                "",
-                            );
-
-                            const id = variant
-                                .querySelector("form.add-to-cart-form")
-                                .getAttribute("data-vid");
-
-                            if (!Array.isArray(memo[name])) {
-                                memo[name] = [];
-                            }
-
-                            memo[name].push({
-                                ...card,
-                                price,
-                                url,
-                                foil,
-                                id,
-                            });
-                        }
-
-                        return memo;
-                    }, {}),
-                searching,
-            );
+                await Promise.all([
+                    nextButton.click(),
+                    this._page.waitForNavigation(),
+                ]);
+            }
 
             for (const match of Object.keys(matches)) {
                 // Sort prices for result
