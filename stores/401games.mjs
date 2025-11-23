@@ -39,7 +39,8 @@ export class FourOhOneGames extends Store {
 
         card: for (const card of Object.values(searching)) {
             console.log(`Looking for: ${card.name}`);
-            await this._page.goto(
+            const page = await this.getPage();
+            await page.goto(
                 "https://store.401games.ca/pages/search-results?" +
                     this.getSearchString(card.name),
                 {
@@ -50,13 +51,9 @@ export class FourOhOneGames extends Store {
 
             while (true) {
                 try {
-                    await this._page.waitForSelector(
-                        ">>> .fs-total-results-text",
-                    );
-                    const element = await this._page.$(
-                        ">>> .fs-total-results-text",
-                    );
-                    const text = await this._page.evaluate(
+                    await page.waitForSelector(">>> .fs-total-results-text");
+                    const element = await page.$(">>> .fs-total-results-text");
+                    const text = await page.evaluate(
                         (el) => el.textContent,
                         element,
                     );
@@ -79,7 +76,7 @@ export class FourOhOneGames extends Store {
             /**
              * @type {[import('../types.mjs').CardPrice]}
              */
-            const matches = await this._page.$$eval(
+            const matches = await page.$$eval(
                 ">>> .product-title-search-term",
                 (els, cardName) =>
                     els.reduce((memo, el) => {
@@ -174,13 +171,14 @@ export class FourOhOneGames extends Store {
 
         cards: for (const card of deck) {
             try {
-                await this._page.goto(card.url, {
+                const page = await this.getPage();
+                await page.goto(card.url, {
                     waitUntil: "networkidle0",
                 });
 
                 // Find the card variant for the expected price
                 for (let i = 0; i < 3; i++) {
-                    await this._page.waitForSelector(
+                    await page.waitForSelector(
                         "#ProductPrice-product-template",
                         {
                             visible: true,
@@ -188,7 +186,7 @@ export class FourOhOneGames extends Store {
                     );
 
                     if (
-                        await this._page.$eval(
+                        await page.$eval(
                             "#ProductPrice-product-template",
                             (el, card) =>
                                 el.textContent ===
@@ -202,14 +200,14 @@ export class FourOhOneGames extends Store {
                         break;
                     }
 
-                    await this._page.waitForSelector(
+                    await page.waitForSelector(
                         ".store-pass-variant-buttons a",
                         {
                             visible: true,
                         },
                     );
                     if (
-                        !(await this._page.$$eval(
+                        !(await page.$$eval(
                             ".store-pass-variant-buttons a",
                             (els, i) => {
                                 if (i + 1 < els.length) {
@@ -232,12 +230,12 @@ export class FourOhOneGames extends Store {
                 }
                 await setTimeout(200);
 
-                const input = await this._page.$("#Quantity");
+                const input = await page.$("#Quantity");
                 await input.click({ clickCount: 3 });
                 await input.type(card.num.toString());
 
-                await this._page.click("#AddToCartText-product-template");
-                await this._page.waitForSelector(".cart-preview", {
+                await page.click("#AddToCartText-product-template");
+                await page.waitForSelector(".cart-preview", {
                     visible: true,
                 });
                 await setTimeout(200);

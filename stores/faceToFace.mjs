@@ -37,37 +37,36 @@ export class FaceToFace extends Store {
         }
 
         for (const deckSlice of deckSlices) {
-            await this._page.goto(
-                "https://facetofacegames.com/pages/deck-builder",
-            );
-            await this._page.waitForSelector("#textarea_input");
-            const input = await this._page.$("#textarea_input");
+            const page = await this.getPage();
+            await page.goto("https://facetofacegames.com/pages/deck-builder");
+            await page.waitForSelector("#textarea_input");
+            const input = await page.$("#textarea_input");
             // Reset the textarea
-            await this._page.$eval("#textarea_input", (el) => (el.value = ""));
+            await page.$eval("#textarea_input", (el) => (el.value = ""));
             const inputText = deckSlice.reduce(
                 (memo, card) => `${memo}\n${card.num} ${card.name}`,
                 "",
             );
             await input.type(inputText);
-            await this._page.click("button.db-decklist-get");
+            await page.click("button.db-decklist-get");
 
-            await this._page.waitForSelector(".hits-wrap-data-info");
-            await this._page.evaluate(() => {
+            await page.waitForSelector(".hits-wrap-data-info");
+            await page.evaluate(() => {
                 window.scrollTo(0, document.body.scrollHeight);
             });
-            await this._page.$$eval(".hits-wrap-data-info", (els) =>
+            await page.$$eval(".hits-wrap-data-info", (els) =>
                 els.forEach((el, n) => {
                     if (n > 0) {
                         el.click();
                     }
                 }),
             );
-            await this._page.waitForSelector(".bb-card-wrapper");
+            await page.waitForSelector(".bb-card-wrapper");
 
             /**
              * @type {Object<string, [import('../types.mjs').CardWithPrice]>}
              */
-            const matches = await this._page.$$eval(
+            const matches = await page.$$eval(
                 "div.hits-wrap",
                 (els, deck) =>
                     els.reduce((memo, el) => {
@@ -185,12 +184,13 @@ export class FaceToFace extends Store {
 
         for (const card of deck) {
             try {
-                await this._page.goto(card.url, {
+                const page = await this.getPage();
+                await page.goto(card.url, {
                     waitUntil: "networkidle0",
                 });
 
                 let foundVariant = null;
-                const variants = await this._page.$$(".f2f-featured-variant");
+                const variants = await page.$$(".f2f-featured-variant");
                 for (const variant of variants) {
                     if (
                         (
@@ -226,7 +226,7 @@ export class FaceToFace extends Store {
                     el.click(),
                 );
 
-                await this._page.waitForSelector("#CartDrawer", {
+                await page.waitForSelector("#CartDrawer", {
                     visible: true,
                 });
             } catch (err) {

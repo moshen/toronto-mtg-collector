@@ -2,26 +2,30 @@ import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from "@fastify/websocket";
 import path from "node:path";
-import { Browser, Page } from "puppeteer-core";
+import { Page } from "puppeteer-core";
 import stores from "./stores/index.mjs";
 import addToCarts from "./actions/addToCarts.mjs";
 import findCards from "./actions/findCards.mjs";
+import { PageFactory } from "./pageFactory.mjs";
 
 /**
- * @type {Browser}
+ * @type {PageFactory}
  */
-let _browser = null;
-/**
- * @type {Page}
- */
-let _page = null;
+let _pageFactory = null;
 
 /**
- * @param {Browser} browser
+ * @param {PageFactory} pageFactory
  */
-export async function setBrowser(browser) {
-    _browser = browser;
-    _page = await browser.newPage();
+export async function setPageFactory(pageFactory) {
+    _pageFactory = pageFactory;
+
+    for (const [name, store] of Object.entries(stores)) {
+        store.setPageFactory(_pageFactory, name);
+    }
+}
+
+async function getPage() {
+    return _pageFactory.getPage("server");
 }
 
 const fastify = Fastify({
@@ -44,15 +48,10 @@ fastify.register(async function (_fastify) {
 
                 switch (message.action) {
                     case "findCards": {
-                        for (const store of Object.values(stores)) {
-                            if (!store.hasPage()) {
-                                await store.setPage(await _browser.newPage());
-                            }
-                        }
-
-                        await _page.bringToFront();
+                        const page = await getPage();
+                        await page.bringToFront();
                         const data = await findCards(message.cardlist);
-                        await _page.bringToFront();
+                        await page.bringToFront();
                         socket.send(
                             JSON.stringify({
                                 action: "findCardsResponse",
@@ -63,7 +62,8 @@ fastify.register(async function (_fastify) {
                     }
                     case "addToCarts": {
                         const data = await addToCarts(message.cards);
-                        await _page.bringToFront();
+                        const page = await getPage();
+                        await page.bringToFront();
                         socket.send(
                             JSON.stringify({
                                 action: "addToCartsResponse",
@@ -92,7 +92,8 @@ export async function start() {
             port: 30000,
         });
 
-        await _page.goto("http://127.0.0.1:30000/");
+        const page = await getPage();
+        await page.goto("http://127.0.0.1:30000/");
     } catch (err) {
         fastify.log.error(err);
         process.exit(1);

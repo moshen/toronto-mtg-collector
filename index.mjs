@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer-core";
 import * as server from "./server.mjs";
+import { PageFactory } from "./pageFactory.mjs";
 
 const chromePath =
     "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
@@ -17,5 +18,6 @@ const browser = await puppeteer.launch({
     ],
 });
 
-await server.setBrowser(browser);
+const pageFactory = new PageFactory(browser);
+await server.setPageFactory(pageFactory);
 await server.start();

@@ -3,9 +3,13 @@ import { Page } from "puppeteer-core";
 export default class Store {
     constructor() {
         /**
-         * @type {import('puppeteer-core').Page}
+         * @type {import('../pageFactory.mjs').PageFactory}
          */
-        this._page = null;
+        this._pageFactory = null;
+        /**
+         * @type {string}
+         */
+        this._storeName = null;
         /**
          * @type {Object<string, import('../types.mjs').CardWithPrice>}
          */
@@ -17,22 +21,25 @@ export default class Store {
     }
 
     /**
-     * @returns {boolean}
+     * @param {import('../pageFactory.mjs').PageFactory} pageFactory
+     * @param {string} storeName
      */
-    hasPage() {
-        return this._page !== null;
+    setPageFactory(pageFactory, storeName) {
+        this._pageFactory = pageFactory;
+        this._storeName = storeName;
     }
 
     /**
-     * @param {Page} page
-     * @returns {Promise<void>}
+     * @returns {Promise<import('puppeteer-core').Page>}
      */
-    async setPage(page) {
-        this._page = page;
-        const session = await page.createCDPSession();
-        await session.send(`Emulation.setFocusEmulationEnabled`, {
-            enabled: true,
-        });
+    async getPage() {
+        if (!this._pageFactory) {
+            throw new Error("PageFactory not set");
+        }
+        if (!this._storeName) {
+            throw new Error("Store name not set");
+        }
+        return this._pageFactory.getPage(this._storeName);
     }
 
     /**

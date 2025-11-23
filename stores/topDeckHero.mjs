@@ -38,18 +38,19 @@ export class TopDeckHero extends Store {
         }
 
         deckSlice: for (const deckSlice of deckSlices) {
-            await this._page.goto(
+            const page = await this.getPage();
+            await page.goto(
                 "https://www.topdeckhero.com/products/multi_search",
             );
 
-            await this._page.waitForSelector("#multisearch_query");
-            const input = await this._page.$("#multisearch_query");
+            await page.waitForSelector("#multisearch_query");
+            const input = await page.$("#multisearch_query");
             const inputText = deckSlice.reduce(
                 (memo, card) => `${memo}\n${card.num} ${card.name}`,
                 "",
             );
             await input.type(inputText);
-            await this._page.$eval("#multisearch_query", (el) => {
+            await page.$eval("#multisearch_query", (el) => {
                 // Should be submit button
                 el.nextElementSibling?.click();
             });
@@ -59,7 +60,7 @@ export class TopDeckHero extends Store {
             // For each page of results
             while (true) {
                 try {
-                    await this._page.waitForSelector("li.product .inner");
+                    await page.waitForSelector("li.product .inner");
                 } catch (err) {
                     // Most likely search failed
                     continue deckSlice;
@@ -68,7 +69,7 @@ export class TopDeckHero extends Store {
                 /**
                  * @type {Object<string, [import('../types.mjs').CardWithPrice]>}
                  */
-                matches = await this._page.$$eval(
+                matches = await page.$$eval(
                     "li.product .inner",
                     (els, cards, matches) =>
                         els.reduce((memo, el) => {
@@ -133,9 +134,7 @@ export class TopDeckHero extends Store {
                     matches,
                 );
 
-                const nextButton = await this._page.$(
-                    ".pagination a.next_page",
-                );
+                const nextButton = await page.$(".pagination a.next_page");
                 if (nextButton === null) {
                     // No more pages
                     break;
@@ -143,7 +142,7 @@ export class TopDeckHero extends Store {
 
                 await Promise.all([
                     nextButton.click(),
-                    this._page.waitForNavigation(),
+                    page.waitForNavigation(),
                 ]);
             }
 
@@ -190,18 +189,19 @@ export class TopDeckHero extends Store {
 
         for (const card of deck) {
             try {
-                const res = await this._page.goto(card.url, {
+                const page = await this.getPage();
+                const res = await page.goto(card.url, {
                     waitUntil: "networkidle0",
                 });
 
-                const variant = await this._page.$(`[data-vid="${card.id}"]`);
+                const variant = await page.$(`[data-vid="${card.id}"]`);
 
                 const input = await variant.$("input.qty");
                 await input.click({ clickCount: 3 });
                 await input.type(card.num.toString());
-                await this._page.keyboard.press("Enter");
+                await page.keyboard.press("Enter");
 
-                await this._page.waitForSelector(".alert-msg", {
+                await page.waitForSelector(".alert-msg", {
                     visible: true,
                     timeout: 60000,
                 });

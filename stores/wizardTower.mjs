@@ -37,38 +37,35 @@ export class WizardTower extends Store {
         }
 
         for (const deckSlice of deckSlices) {
-            await this._page.goto(
-                "https://store.wizardtower.com/pages/deck-builder",
-            );
+            const page = await this.getPage();
+            await page.goto("https://store.wizardtower.com/pages/deck-builder");
 
             try {
-                await this._page.waitForSelector("#close-popup", {
+                await page.waitForSelector("#close-popup", {
                     timeout: 5000,
                 });
-                await this._page.click("#close-popup");
+                await page.click("#close-popup");
             } catch (_err) {
                 // Don't care about this
             }
 
-            await this._page.waitForSelector("#card-list");
-            const input = await this._page.$("#card-list");
+            await page.waitForSelector("#card-list");
+            const input = await page.$("#card-list");
             const inputText = deckSlice.reduce(
                 (memo, card) => `${memo}\n${card.num} ${card.name}`,
                 "",
             );
             await input.type(inputText);
-            await this._page.click("#submit-button");
+            await page.click("#submit-button");
 
-            await this._page.waitForSelector("#deck-builder-results");
-            await this._page.waitForSelector(".deck-builder-result-group", {
+            await page.waitForSelector("#deck-builder-results");
+            await page.waitForSelector(".deck-builder-result-group", {
                 timeout: 120000,
             });
 
             const resultRegex = /^([0-9]+) result/;
 
-            const resultGroups = await this._page.$$(
-                ".deck-builder-result-group",
-            );
+            const resultGroups = await page.$$(".deck-builder-result-group");
             for (const result of resultGroups) {
                 // Get card to match
                 const name = await result.$eval(
@@ -214,17 +211,18 @@ export class WizardTower extends Store {
 
         for (const card of deck) {
             try {
-                await this._page.goto(card.url, {
+                const page = await this.getPage();
+                await page.goto(card.url, {
                     waitUntil: "networkidle0",
                 });
 
-                const input = await this._page.$(".quantity__input");
+                const input = await page.$(".quantity__input");
                 await input.click({ clickCount: 3 });
                 await input.type(card.num.toString());
 
-                await this._page.click("button.product-form__submit");
+                await page.click("button.product-form__submit");
 
-                await this._page.waitForSelector(".cart-notification__header", {
+                await page.waitForSelector(".cart-notification__header", {
                     visible: true,
                 });
             } catch (err) {
