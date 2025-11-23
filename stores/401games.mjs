@@ -19,9 +19,6 @@ export class FourOhOneGames extends Store {
      * @returns {import('../types.mjs').FoundCards}
      */
     async findCards(deck) {
-        this._signalController = new AbortController();
-        this._signal = this._signalController.signal;
-
         const resultsRegex = /^([0-9]+).+/;
 
         /**
@@ -162,8 +159,6 @@ export class FourOhOneGames extends Store {
             await setTimeout(200);
         }
 
-        this._signalController.abort();
-
         return this._found;
     }
 
@@ -172,9 +167,6 @@ export class FourOhOneGames extends Store {
      * @returns {Promise<import("../types.mjs").MissingCards>}
      */
     async addToCart(deck) {
-        this._signalController = new AbortController();
-        this._signal = this._signalController.signal;
-
         /**
          * @type {import("../types.mjs").MissingCards}
          */
@@ -261,8 +253,6 @@ export class FourOhOneGames extends Store {
         }
 
         // TODO: Open the cart and check what was added and add to results?
-
-        this._signalController.abort();
 
         return missingCards;
     }

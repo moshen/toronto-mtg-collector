@@ -1,4 +1,3 @@
-import { cycleTabs } from "../util.mjs";
 import stores from "../stores/index.mjs";
 
 const lineRegex = /^([0-9]+)\s(.+)/;
@@ -51,8 +50,6 @@ export default async function findCards(_cardlist) {
     for (const store of Object.keys(stores)) {
         cardsFromStoresPromises[store] = stores[store].findCards(cards);
     }
-
-    await cycleTabs();
 
     /**
      * @type {Object<string, import('../types.mjs').FoundCards>}

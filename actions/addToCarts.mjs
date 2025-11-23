@@ -1,4 +1,3 @@
-import { cycleTabs } from "../util.mjs";
 import stores from "../stores/index.mjs";
 
 /**
@@ -21,8 +20,6 @@ export default async function addToCarts(cards) {
             Object.values(cards[cardsStore]),
         );
     }
-
-    await cycleTabs();
 
     /**
      * @type {Object<string, import("../types.mjs").MissingCards>}

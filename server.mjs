@@ -46,10 +46,11 @@ fastify.register(async function (_fastify) {
                     case "findCards": {
                         for (const store of Object.values(stores)) {
                             if (!store.hasPage()) {
-                                store.setPage(await _browser.newPage());
+                                await store.setPage(await _browser.newPage());
                             }
                         }
 
+                        await _page.bringToFront();
                         const data = await findCards(message.cardlist);
                         await _page.bringToFront();
                         socket.send(

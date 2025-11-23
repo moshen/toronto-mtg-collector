@@ -39,9 +39,7 @@
 /**
  * @typedef {Object} Store
  * @property {() => boolean} hasPage
- * @property {(page: import('puppeteer-core').Page) => void} setPage
- * @property {() => Promise<void>} switchTab
- * @property {() => boolean} isWorking
+ * @property {(page: import('puppeteer-core').Page) => Promise<void>} setPage
  * @property {(deck: Object<string, Card>]) => Promise<FoundCards>} findCards
  * @property {(deck: [CardWithPrice]) => Promise<MissingCards>} addToCart
  */

@@ -10,6 +10,11 @@ const browser = await puppeteer.launch({
     // We want to see what's happening
     headless: false,
     defaultViewport: null,
+    args: [
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+    ],
 });
 
 await server.setBrowser(browser);

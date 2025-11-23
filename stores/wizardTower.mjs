@@ -6,9 +6,6 @@ export class WizardTower extends Store {
      * @returns {import('../types.mjs').FoundCards}
      */
     async findCards(deck) {
-        this._signalController = new AbortController();
-        this._signal = this._signalController.signal;
-
         /**
          * @type {Object<string, import('../types.mjs').Card>}
          */
@@ -28,7 +25,6 @@ export class WizardTower extends Store {
         const deckArr = Object.values(searching);
 
         if (deckArr.length < 1) {
-            this._signalController.abort();
             return this._found;
         }
 
@@ -203,8 +199,6 @@ export class WizardTower extends Store {
             }
         }
 
-        this._signalController.abort();
-
         return this._found;
     }
 
@@ -213,9 +207,6 @@ export class WizardTower extends Store {
      * @returns {Promise<import("../types.mjs").MissingCards>}
      */
     async addToCart(deck) {
-        this._signalController = new AbortController();
-        this._signal = this._signalController.signal;
-
         /**
          * @type {import("../types.mjs").MissingCards}
          */
@@ -248,8 +239,6 @@ export class WizardTower extends Store {
         }
 
         // TODO: Open the cart and check what was added and add to results?
-
-        this._signalController.abort();
 
         return missingCards;
     }

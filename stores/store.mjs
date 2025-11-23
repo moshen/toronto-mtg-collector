@@ -14,15 +14,6 @@ export default class Store {
          * @type {Object<string, import('../types.mjs').Card>}
          */
         this._notFound = {};
-
-        /**
-         * @type {AbortController}
-         */
-        this._signalController = null;
-        /**
-         * @type {AbortSignal}
-         */
-        this._signal = null;
     }
 
     /**
@@ -34,29 +25,14 @@ export default class Store {
 
     /**
      * @param {Page} page
-     */
-    setPage(page) {
-        this._page = page;
-    }
-
-    /**
      * @returns {Promise<void>}
      */
-    async switchTab() {
-        if (this._page) {
-            await this._page.bringToFront();
-        }
-    }
-
-    /**
-     * @returns {boolean}
-     */
-    isWorking() {
-        if (!this._signal) {
-            return false;
-        }
-
-        return !this._signal.aborted;
+    async setPage(page) {
+        this._page = page;
+        const session = await page.createCDPSession();
+        await session.send(`Emulation.setFocusEmulationEnabled`, {
+            enabled: true,
+        });
     }
 
     /**
