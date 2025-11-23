@@ -15,6 +15,7 @@ Toronto (and Canadian) retailers.
 
 ```shell
 mise install
+mise run setup
 ```
 
 ## Run
