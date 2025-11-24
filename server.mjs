@@ -2,7 +2,6 @@ import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from "@fastify/websocket";
 import path from "node:path";
-import { Page } from "puppeteer-core";
 import stores from "./stores/index.mjs";
 import addToCarts from "./actions/addToCarts.mjs";
 import findCards from "./actions/findCards.mjs";
@@ -24,6 +23,9 @@ export async function setPageFactory(pageFactory) {
     }
 }
 
+/**
+ * @returns {Promise<import('puppeteer-core').Page>}
+ */
 async function getPage() {
     return _pageFactory.getPage("server");
 }
@@ -84,6 +86,9 @@ fastify.get("/", async function handler(request, reply) {
     return reply.sendFile("index.html");
 });
 
+/**
+ * @returns {Promise<void>}
+ */
 export async function start() {
     // Run the server!
     try {

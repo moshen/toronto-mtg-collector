@@ -4,7 +4,7 @@ const lineRegex = /^([0-9]+)\s(.+)/;
 
 /**
  * @param {string} _cardlist
- * @returns {Object<string, import('../types.mjs').FoundCards>}
+ * @returns {Promise<import('../types.mjs').FoundAndNotCards>}
  */
 export default async function findCards(_cardlist) {
     /**
@@ -70,7 +70,7 @@ export default async function findCards(_cardlist) {
 /**
  * @param {Object<string, import('../types.mjs').Card>} cards
  * @param {Object<string, import('../types.mjs').FoundCards>} storesWithCards
- * @returns {Object<string, import('../types.mjs').FoundCards>}
+ * @returns {import('../types.mjs').FoundAndNotCards}
  */
 function findCheapest(cards, storesWithCards) {
     const notFound = [];

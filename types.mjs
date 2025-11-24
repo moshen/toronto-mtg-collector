@@ -38,8 +38,10 @@
 
 /**
  * @typedef {Object} Store
- * @property {() => boolean} hasPage
- * @property {(page: import('puppeteer-core').Page) => Promise<void>} setPage
- * @property {(deck: Object<string, Card>]) => Promise<FoundCards>} findCards
+ * @property {import('./pageFactory.mjs').PageFactory} _pageFactory
+ * @property {string} _storeName
+ * @property {(pageFactory: import('./pageFactory.mjs').PageFactory, storeName: string) => void} setPageFactory
+ * @property {() => Promise<import('puppeteer-core').Page>} getPage
+ * @property {(deck: Object<string, Card>) => Promise<FoundCards>} findCards
  * @property {(deck: [CardWithPrice]) => Promise<MissingCards>} addToCart
  */
