@@ -102,10 +102,11 @@ export class FourOhOneGames extends Store {
                         }
 
                         let foil = false;
+                        const itemName =
+                            scheme.querySelector('[itemprop="name"]').content;
                         if (
-                            scheme
-                                .querySelector('[itemprop="name"]')
-                                .content.includes("(Foil)")
+                            itemName.includes("(Foil)") ||
+                            itemName.includes("(Surge Foil)")
                         ) {
                             foil = true;
                         }
