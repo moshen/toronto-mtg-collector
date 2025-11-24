@@ -12,5 +12,4 @@ run = "node ./index.mjs"
 
 [tasks.fmt]
 description = "Format all files"
-run = "biome format --fix --indent-style=space --indent-width=4 *.mjs */*.mjs"
-run_windows = "pwsh -c 'biome format --fix --indent-style=space --indent-width=4 (get-item *.mjs) (get-item */*.mjs)'"
+run = "biome format --fix"
