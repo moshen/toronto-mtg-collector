@@ -154,26 +154,3 @@ function findCheapest(cards, storesWithCards) {
         notFound,
     };
 }
-
-// TODO: Rework this
-// for (const result of results) {
-// console.log("\n\nCards found:");
-// let total = 0;
-// for (const card of result) {
-// console.log(`${card.num} ${card.name} : ${card.num * card.price}`);
-// total += card.price;
-// }
-// console.log(`Estimated Total: ${total}`);
-
-// console.log("\n\nIncluding Foils:");
-// for (const card of result) {
-// if (card.foil) {
-// console.log(card.name);
-// }
-// }
-
-// console.log("\n\nCards not found:");
-// for (const card of result.not) {
-// console.log(`${card.num} ${card.name}`);
-// }
-// }
