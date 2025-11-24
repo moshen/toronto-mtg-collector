@@ -1,6 +1,7 @@
 const socket = new WebSocket("/ws");
 const form = document.getElementById("card-form");
 const textarea = document.getElementById("card-list");
+const storeCheckboxes = document.getElementById("store-checkboxes");
 const loadingSpinner = document.getElementById("loading-spinner");
 const cardTable = document.getElementById("card-table");
 const cardControls = document.getElementById("card-controls");
@@ -123,8 +124,32 @@ function recalculateTotals(store) {
 }
 
 socket.addEventListener("open", (ev) => {
-    form.querySelector("fieldset").disabled = false;
+    socket.send(
+        JSON.stringify({
+            action: "getStores",
+        }),
+    );
 });
+
+function createStoreCheckboxes(stores) {
+    storeCheckboxes.innerHTML = "";
+    for (const store of stores) {
+        const div = document.createElement("div");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `store-${store}`;
+        checkbox.value = store;
+        checkbox.checked = true;
+        div.appendChild(checkbox);
+
+        const label = document.createElement("label");
+        label.htmlFor = `store-${store}`;
+        label.textContent = store;
+        div.appendChild(label);
+
+        storeCheckboxes.appendChild(div);
+    }
+}
 
 function createStoreTables(cards, storesWithCards) {
     let total = 0;
@@ -316,6 +341,10 @@ function updateTableAmountsFromCarts(storesMissingCards) {
 socket.addEventListener("message", (ev) => {
     const message = JSON.parse(ev.data);
     switch (message.action) {
+        case "getStoresResponse":
+            createStoreCheckboxes(message.data);
+            form.querySelector("fieldset").disabled = false;
+            break;
         case "findCardsResponse":
             loadingSpinner.classList.add("invisible");
             createStoreTables(message.data.cards, message.data.storesWithCards);
@@ -349,10 +378,14 @@ form.addEventListener("submit", (ev) => {
     cardControls.innerHTML = "";
     ev.preventDefault();
     const cardlist = textarea.value;
+    const stores = Array.from(
+        storeCheckboxes.querySelectorAll('input[type="checkbox"]:checked'),
+    ).map((el) => el.value);
     socket.send(
         JSON.stringify({
             action: "findCards",
             cardlist,
+            stores,
         }),
     );
 });

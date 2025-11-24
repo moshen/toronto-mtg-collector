@@ -4,9 +4,10 @@ const lineRegex = /^([0-9]+)\s(.+)/;
 
 /**
  * @param {string} _cardlist
+ * @param {string[]} [storesToSearch]
  * @returns {Promise<import('../types.mjs').FoundAndNotCards>}
  */
-export default async function findCards(_cardlist) {
+export default async function findCards(_cardlist, storesToSearch) {
     /**
      * @type {Object<string, import('../types.mjs').Card>}
      */
@@ -48,6 +49,9 @@ export default async function findCards(_cardlist) {
     const cardsFromStoresPromises = {};
 
     for (const store of Object.keys(stores)) {
+        if (storesToSearch && !storesToSearch.includes(store)) {
+            continue;
+        }
         cardsFromStoresPromises[store] = stores[store].findCards(cards);
     }
 
@@ -56,7 +60,7 @@ export default async function findCards(_cardlist) {
      */
     const cardsFromStores = {};
 
-    for (const store of Object.keys(stores)) {
+    for (const store of Object.keys(cardsFromStoresPromises)) {
         // TODO: Try catch here?
         const result = await cardsFromStoresPromises[store];
         cardsFromStores[store] = result;
@@ -78,6 +82,10 @@ function findCheapest(cards, storesWithCards) {
     for (const card of Object.values(cards)) {
         let cheapestStore = "";
         for (const store of Object.keys(stores)) {
+            if (!storesWithCards[store]) {
+                continue;
+            }
+
             if (!storesWithCards[store][card.name.toLocaleLowerCase()]) {
                 continue;
             }
@@ -122,6 +130,10 @@ function findCheapest(cards, storesWithCards) {
 
         // Remove amount from other stores
         for (const store of Object.keys(stores)) {
+            if (!storesWithCards[store]) {
+                continue;
+            }
+
             if (store === cheapestStore) {
                 continue;
             }

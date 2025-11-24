@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from "@fastify/websocket";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 import stores from "./stores/index.mjs";
 import addToCarts from "./actions/addToCarts.mjs";
 import findCards from "./actions/findCards.mjs";
@@ -49,10 +50,25 @@ fastify.register(async function (_fastify) {
                 const message = JSON.parse(data.toString("utf-8"));
 
                 switch (message.action) {
+                    case "getStores": {
+                        socket.send(
+                            JSON.stringify({
+                                action: "getStoresResponse",
+                                data: Object.keys(stores),
+                            }),
+                        );
+                        break;
+                    }
                     case "findCards": {
                         const page = await getPage();
+                        const dataPromise = findCards(
+                            message.cardlist,
+                            message.stores,
+                        );
+                        // Flip back to the collector page after spinning up tabs
+                        await setTimeout(500);
                         await page.bringToFront();
-                        const data = await findCards(message.cardlist);
+                        const data = await dataPromise;
                         await page.bringToFront();
                         socket.send(
                             JSON.stringify({
@@ -63,8 +79,12 @@ fastify.register(async function (_fastify) {
                         break;
                     }
                     case "addToCarts": {
-                        const data = await addToCarts(message.cards);
                         const page = await getPage();
+                        const dataPromise = addToCarts(message.cards);
+                        // Flip back to the collector page after spinning up tabs
+                        await setTimeout(500);
+                        await page.bringToFront();
+                        const data = await dataPromise;
                         await page.bringToFront();
                         socket.send(
                             JSON.stringify({

@@ -37,5 +37,4 @@ mise run fmt
 - Look at number of available cards
   - This will require a little bit of a rework as I initially was only thinking
     about commander when making this
-- Add store selector
 - Add toggle for foil/non-foil/cheapest preference
